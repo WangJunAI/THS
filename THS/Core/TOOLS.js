@@ -59,7 +59,7 @@ TOOLS.DATE.GetTomorrow = function (dat) {
 TOOLS.DATE.GetDateArray = function (count, startDate, formatter) {
     count = 30;
     var arr = [];
-    startDate = (true === PARAM_CHECKER.IsInstanceOf(startDate, Date)) ? startDate : new Date();
+    startDate = (true === PARAM_CHECKER.IsInstanceOf(startDate, Date)) ? startDate : new Date(); ///获取开始时间
     for (var i = 0; i < count; i++) {
 
     }
