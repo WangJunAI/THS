@@ -55,14 +55,26 @@ TOOLS.DATE.GetTomorrow = function (dat) {
     return new Date(tick);
 }
 
+///获取指定日期的明天
+TOOLS.DATE.GetOtherDay = function (dat,count) {
+    dat = (true === PARAM_CHECKER.IsInstanceOf(dat, Date)) ? dat : new Date();
+    var tick = dat.getTime() + count * 1000 * 60 * 60 * 24;
+    return new Date(tick);
+}
+
+
 ///获取一个数组
 TOOLS.DATE.GetDateArray = function (count, startDate, formatter) {
     count = 30;
     var arr = [];
     startDate = (true === PARAM_CHECKER.IsInstanceOf(startDate, Date)) ? startDate : new Date(); ///获取开始时间
     for (var i = 0; i < count; i++) {
-
+        var nextDay = TOOLS.DATE.GetOtherDay(startDate, i);
+        //nextDay = TOOLS.DATE.GetNow(nextDay);
+        arr.push(nextDay.toString());
     }
+    return arr;
+
 }
 
 //-----------------------

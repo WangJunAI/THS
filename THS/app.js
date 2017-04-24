@@ -6,4 +6,5 @@
 
 var tool = require("./Core/TOOLS");
 var res = tool.DATE.GetNow();
+res = tool.DATE.GetDateArray();
 console.log('Hello world');
