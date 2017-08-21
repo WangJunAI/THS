@@ -71,7 +71,7 @@ TOOLS.DATE.GetDateArray = function (count, startDate, formatter) {
     for (var i = 0; i < count; i++) {
         var nextDay = TOOLS.DATE.GetOtherDay(startDate, i);
         //nextDay = TOOLS.DATE.GetNow(nextDay);
-        arr.push(nextDay.toString());
+        arr.push(nextDay);
     }
     return arr;
 

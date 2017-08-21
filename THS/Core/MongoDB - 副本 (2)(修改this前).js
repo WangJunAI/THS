@@ -40,12 +40,13 @@ var MongoDB = {
             newInstance[key] = MongoDB[key];
         }
         
+        //this._db= MongoDB.GetLoader().LoadMongoDB();
         
         if (PARAM_CHECKER.IsObject(option)) {
             newInstance._url = option.url;
         }
         else if (PARAM_CHECKER.IsNotEmptyString(option)) {
-            newInstance._url = (PARAM_CHECKER.Contains('/', option))?option:"mongodb://192.168.0.140:27017/" + option;
+            newInstance._url = (PARAM_CHECKER.Contains('/', option))?option:"mongodb://192.168.0.130:27017/" + option;
         }
 
         return newInstance;
@@ -64,28 +65,30 @@ var MongoDB = {
             jsonData: jsonData,
             callback: callback,
             retryCount: retryCount
-        }; 
-
-        _THIS = this;
-
-        _THIS.QueneIN.push(item);
-
-        if (0 < _THIS.QueneIN.length && 0 == _THIS.Status) {
-            _THIS._Save();
+        };
+        MongoDB.QueneIN.push(item);
+        
+        if (0 < MongoDB.QueneIN.length && 0 == MongoDB.Status) {
+            MongoDB._Save();
         }
     },
     
     ///保存一个对象
     _Save: function () {
         var _THIS = this;
-        _THIS.Status = 1; ///占用状态
-        console.log("Url" + _THIS._url + "  保存队列深度-" + _THIS.QueneIN.length);
-         
+        console.log("保存队列深度-" + _THIS.QueneIN.length);
+        
+        //if (_THIS.QueneIN.length<=10) {
+        //    if (PARAM_CHECKER.IsFunction(_THIS.CallBack.QueueSaveCallBack)) {
+        //        _THIS.CallBack.QueueSaveCallBack(_THIS.QueneIN.length);
+        //    }
+        //}
+
         mongo.connect(_THIS._url, function (connectionErr, db) {
             if ((null === connectionErr || undefined === connectionErr) && null != db) {
                 ///若打开成功
                 if (0 < _THIS.QueneIN.length) {
-
+                    _THIS.Status = 1;
                     ///若队列中有数据
                     var queueItem = _THIS.QueneIN.pop();
                     var collectionName = queueItem.collectionName;
@@ -121,14 +124,14 @@ var MongoDB = {
                     }
                     
                     db.collection(collectionName).findOneAndUpdate({ _id: jsonData._id }, { $set: jsonData }, { upsert: true }, function (saveErr, result) {
-                        db.close(); 
-
+                        db.close();
+                        //_THIS.QueneOUT.push({ callback: callback, err: err, result: result });
                         if (null === saveErr) {
                             console.log("保存成功-" + _THIS.QueneIN.length + "-" + result.insertedCount + "-" + _THIS.Status);
                         }
                         else {
                             _THIS.Status = 0;
-                            console.log(_THIS._url+" 保存失败- " + _THIS.QueneIN.length + " - " + JSON.stringify(saveErr));
+                            console.log("------------------------------保存失败-" + _THIS.QueneIN.length + "-" + JSON.stringify(saveErr));
                         }
                         
                         if (PARAM_CHECKER.IsFunction(callback)) {
@@ -150,7 +153,7 @@ var MongoDB = {
                         console.log(closeErr);
                     }
  
-                    console.log(_THIS._url +" 队列已空 " + " - " + _THIS.Status+"  "+ _THIS.QueneIN.length);
+                    console.log("队列已空" + "-" + _THIS.Status+"  "+ _THIS.QueneIN.length);
  
                     if (PARAM_CHECKER.IsFunction(_THIS.CallBack.QueueSaveCallBack)) {
                         _THIS.CallBack.QueueSaveCallBack(_THIS.QueneIN.length);

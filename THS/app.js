@@ -7,4 +7,7 @@
 var tool = require("./Core/TOOLS");
 var res = tool.DATE.GetNow();
 res = tool.DATE.GetDateArray();
+
+var news = require("./BIZ/NEWS");
+news.Load();
 console.log('Hello world');
