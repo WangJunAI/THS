@@ -9,5 +9,8 @@ var res = tool.DATE.GetNow();
 res = tool.DATE.GetDateArray();
 
 var news = require("./BIZ/NEWS");
-news.Load();
+//news.Load();
+var ths = require("./BIZ/THS");
+ths.TraverseData();
+
 console.log('Hello world');

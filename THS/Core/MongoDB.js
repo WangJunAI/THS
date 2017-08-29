@@ -334,13 +334,15 @@ var MongoDB = {
             }
         });
     },
-    
+
+    ///遍历一个集合
     Traverse: function (collectionName , jsonData,callbackData, callbackEnd, callbackError) {
         var loader = MongoDB.GetLoader();
         var mongo = loader.LoadMongoDB();
         var checker = MongoDB.checker;
         var _THIS = this;
         var _db = mongo;
+
         if (checker.IsString(jsonData._id)) {
             var _id = new mongo.ObjectID(jsonData._id);
             jsonData._id = _id;
@@ -393,8 +395,6 @@ var MongoDB = {
                 console.log("查找失败-" + err);
             }
         });
-
-    
     },
 
     ///执行特定的命令
@@ -522,6 +522,17 @@ exports.Remove = function (collectionName , jsonData, callback, retryCount) {
     return res;
 }
 
+///获取一个空白的配置信息
 exports.GetEmptyOption = function () {
     return MongoDB.GetEmptyOption();
 }
+
+///遍历一个集合
+exports.TraverseCollection = function (collectionName, jsonData, callbackData, callbackEnd, callbackError) {
+    return MongoDB.Traverse(collectionName, jsonData, callbackData, callbackEnd, callbackError);
+}
+
+exports.Traverse = function (collectionName, jsonData, callbackData, callbackEnd, callbackError) {
+    return MongoDB.Traverse(collectionName, jsonData, callbackData, callbackEnd, callbackError);
+}
+

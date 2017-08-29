@@ -35,6 +35,9 @@
     <Compile Include="BIZ\NEWS.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="BIZ\THS.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Core\CONST.js" />
     <Compile Include="Core\DBIterator.js" />
     <Compile Include="Core\HttpService.js" />
