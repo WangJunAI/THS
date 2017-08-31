@@ -1,5 +1,6 @@
 ﻿var MongoDB = require("../Core/MongoDB");
 var PARAM_CHECKER = require("../Core/PARAM_CHECKER");
+var TOOLS = require("../Core/TOOLS")
 
 var $ = require('cheerio');
 var count = 0;
@@ -104,14 +105,30 @@ var THS = {
 
         ///公司概况
         var $company_details = $($page.find(".company_details"));
-        var company = { Key: [], Value: [] };
+        var company = { Key: [], Value: [] }; ///Key是结构 Value是值
         var dt_dd = $company_details.children();
         for (var i = 0; i < dt_dd.length; i++) {
             if (true === $(dt_dd[i]).is("dt")) {
                 company.Key.push($(dt_dd[i]).text().replace('：', ''));
             }
             else if (true === $(dt_dd[i]).is("dd")) {
-                company.Value.push($(dt_dd[i]).text());
+                var dd = $(dt_dd[i]).text();
+                if (0 < $(dt_dd[i]).attr("title")) {
+                    dd = $(dt_dd[i]).attr("title");///获取完整字符串
+                }
+                else  {
+                    dd = dd.replace('元', '').replace('亿', '').replace('%', '');
+                    if (false === isNaN(dd)) {
+                        ///如果是数字
+                        dd = Number(dd);
+                    }
+                    else if (false === isNaN(Date.parse(dd))) {
+                        ///若转换日期成功
+                        dd = TOOLS.Convertor.ToDate(dd);
+                    }
+                    
+                } 
+                company.Value.push(dd);
             }
         }
 
@@ -126,7 +143,7 @@ var THS = {
             var item = {
                 Text: text,
                 Href: href,
-                Date: date,
+                Date: TOOLS.Convertor.ToDate("2017-" + date),
             };
 
             gsxw.push(item);
@@ -144,7 +161,7 @@ var THS = {
             var item = {
                 Text: text,
                 Href: href,
-                Date: date,
+                Date: TOOLS.Convertor.ToDate("2017-"+date),
             };
 
             gsgg.push(item);
@@ -161,7 +178,7 @@ var THS = {
             var item = {
                 Text: text,
                 Href: href,
-                Date: date,
+                Date: TOOLS.Convertor.ToDate("2017-" + date),
             };
 
             hyzx.push(item);
@@ -178,7 +195,7 @@ var THS = {
             var item = {
                 Text: text,
                 Href: href,
-                Date: date,
+                Date: TOOLS.Convertor.ToDate("2017-" + date),
             };
 
             yjbg.push(item);
@@ -201,13 +218,13 @@ var THS = {
                 var c7 = $(tr[7]).text();///卖出营业部
 
                 var item = {
-                    C1: c1,
-                    C2: c2,
-                    C3: c3,
-                    C4: c4,
-                    C5: c5,
-                    C6: c6,
-                    C7: c7,
+                    C1: TOOLS.Convertor.ToDate(c1),
+                    C2: Number(c2),
+                    C3: Number(c3),
+                    C4: Number(c4),
+                    C5: Number(c5),
+                    C6: Number(c6),
+                    C7: Number(c7),
                 };
 
                 dzjy.push(item);
@@ -230,14 +247,14 @@ var THS = {
                 var c8 = $(tr[7]).text();///融资融券余额(亿元)
 
                 var item = {
-                    C1: c1,
-                    C2: c2,
-                    C3: c3,
-                    C4: c4,
-                    C5: c5,
-                    C6: c6,
-                    C7: c7,
-                    C8: c8
+                    C1: TOOLS.Convertor.ToDate(c1),
+                    C2: Number(c2),
+                    C3: Number(c3),
+                    C4: Number(c4),
+                    C5: Number(c5),
+                    C6: Number(c6),
+                    C7: Number(c7),
+                    C8: Number(c8)
                 };
 
                 rzrq.push(item);
@@ -253,44 +270,73 @@ var THS = {
 
         ///今日龙虎榜数据分析  
         var lhbToday = [];
+        var lhbTodayCal = {};
         for (var i = 0; i < $lhbTodayTrArray.length; i++) {
             var tdArray = $($lhbTodayTrArray[i]).children();
-            var href = $(tdArray[0]).find("a").attr("href");
-            var yybName = $(tdArray[0]).text();///营业部名称
-            var purchaseAmount = $(tdArray[1]).text();///买入金额
-            var proportionTotalP = $(tdArray[2]).text();///占总成交比例	
-            var salesAmount = $(tdArray[2]).text();///卖出金额
-            var proportionTotalS = $(tdArray[3]).text();///占总成交比例	
-            var lhbItem1 = {
-                Href: href,
-                YYBName: yybName,
-                MRJE: purchaseAmount,
-                MRBL: proportionTotalP,
-                MCJE: salesAmount,
-                MCBL: proportionTotalS
-            };
-            lhbToday.push(lhbItem1);
+            if (1 === tdArray.length) {
+                if ("买入总计" === $(tdArray[0]).text().substring(0, 4)) {
+                    lhbTodayCal["MRZJ"] = Number($(tdArray[0]).text().replace("买入总计：", "").replace("万元", ""));
+                }
+                else if ("卖出总计" === $(tdArray[0]).text().substring(0, 4)) {
+                    lhbTodayCal["MCZJ"] = Number($(tdArray[0]).text().replace("卖出总计：", "").replace("万元", ""));
+                }
+                else if ("买卖净差" === $(tdArray[0]).text().substring(0, 4)) {
+                    lhbTodayCal["MMJC"] = Number($(tdArray[0]).text().replace("买卖净差：", "").replace("万元", ""));
+                }
+            }
+            else if (1 < tdArray.length) {
+
+                var href = $(tdArray[0]).find("a").attr("href");
+                var yybName = $(tdArray[0]).text();///营业部名称
+                var purchaseAmount = $(tdArray[1]).text();///买入金额
+                var proportionTotalP = $(tdArray[2]).text();///占总成交比例	
+                var salesAmount = $(tdArray[3]).text();///卖出金额
+                var proportionTotalS = $(tdArray[4]).text();///占总成交比例	
+                var lhbItem1 = {
+                    Href: href,
+                    YYBName: yybName,
+                    MRJE: Number(purchaseAmount),
+                    MRBL: Number(proportionTotalP.replace('%', '')),
+                    MCJE: Number(salesAmount),
+                    MCBL: Number(proportionTotalS.replace('%', ''))
+                };
+                lhbToday.push(lhbItem1);
+            }
         }
         ///昨日龙虎榜数据分析  
         var lhbYesterday = [];
+        var lhbYesterdayCal = {};
         for (var i = 0; i < $lhbYesterdayTrArray.length; i++) {
             var tdArray = $($lhbYesterdayTrArray[i]).children();
-            var href = $(tdArray[0]).find("a").attr("href");
-            var yybName = $(tdArray[0]).text();///营业部名称
-            var purchaseAmount = $(tdArray[1]).text();///买入金额
-            var proportionTotalP = $(tdArray[2]).text();///占总成交比例	
-            var salesAmount = $(tdArray[2]).text();///卖出金额
-            var proportionTotalS = $(tdArray[3]).text();///占总成交比例	
-            var lhbItem2 = {
-                Href: href,
-                YYBName: yybName,
-                MRJE: purchaseAmount,
-                MRBL: proportionTotalP,
-                MCJE: salesAmount,
-                MCBL: proportionTotalS
-            };
+            if (1 === tdArray.length) {
+                if ("买入总计" === $(tdArray[0]).text().substring(0, 4)) {
+                    lhbYesterdayCal["MRZJ"] = Number($(tdArray[0]).text().replace("买入总计：", "").replace("万元", ""));
+                }
+                else if ("卖出总计" === $(tdArray[0]).text().substring(0, 4)) {
+                    lhbYesterdayCal["MCZJ"] = Number($(tdArray[0]).text().replace("卖出总计：", "").replace("万元", ""));
+                }
+                else if ("买卖净差" === $(tdArray[0]).text().substring(0, 4)) {
+                    lhbYesterdayCal["MMJC"] = Number($(tdArray[0]).text().replace("买卖净差：", "").replace("万元", ""));
+                }
+            }
+            else if (1 < tdArray.length) {
+                var href = $(tdArray[0]).find("a").attr("href");
+                var yybName = $(tdArray[0]).text();///营业部名称
+                var purchaseAmount = $(tdArray[1]).text();///买入金额
+                var proportionTotalP = $(tdArray[2]).text();///占总成交比例	
+                var salesAmount = $(tdArray[3]).text();///卖出金额
+                var proportionTotalS = $(tdArray[4]).text();///占总成交比例	
+                var lhbItem2 = {
+                    Href: href,
+                    YYBName: yybName,
+                    MRJE: Number(purchaseAmount),
+                    MRBL: Number(proportionTotalP.replace('%', '')),
+                    MCJE: Number(salesAmount),
+                    MCBL: Number(proportionTotalS.replace('%', '')),
+                };
 
-            lhbYesterday.push(lhbItem1);
+                lhbYesterday.push(lhbItem1);
+            }
         }
 
 
@@ -304,9 +350,31 @@ var THS = {
             RZRQ: rzrq,///融资融券
             LHB: {///龙虎榜
                 Today: lhbToday,
-                Yesterday: lhbYesterday
+                Yesterday: lhbYesterday,
+                TodayCal: lhbTodayCal,
+                YestodayCal:lhbYesterdayCal,
+            },
+            Intro: {
+                Company: "公司概况",
+                GSXW: "公司新闻",
+                GSGG: "公司公告",
+                HYZX: "行业资讯",
+                YJBG: "研究报告",
+                DZJY: { Name: "大宗交易", Column: { C1: "交易日期", C2: "成交价(元)", C3: "成交金额(万元)", C4: "成交量(万股)", C5: "溢价率", C6: "买入营业部", C7: "卖出营业部"}},
+                RZRQ: { Name: "融资融券", Column: { C1: "交易日期", C2: "融资余额(亿元)", C3: "融资余额/流通市值", C4: "融资买入额(亿元)", C5: "融券卖出量(万股)", C6: "融券余量(万股)", C7: "融券余额(万元)", C8: "融资融券余额(亿元)" } },
+                LHB: { Name: "龙虎榜", Column: { Href: "营业部链接", YYBName: "营业部名称", MRJE: "买入金额", MRBL: "买入金额占总成交比例", MCJE: "卖出金额", MCBL: "卖出金额占总成交比例" }, Cal: { MRZJ: "买入总计", MCZJ: "卖出总计",MMJC: "买卖净差"}},
             }
         };
+
+        if (0 < home.DZJY.length) {
+            var q = 0;
+        }
+        if ( 0 < home.RZRQ.length) {
+            var q = 0;
+        }
+        if (0 < home.LHB.Today.length) {
+            var q = 0;
+        }
 
         return home;
 
@@ -334,22 +402,24 @@ var THS = {
             var c10 = $(tdArray[9]).text();///小单 - 净额
             var c11 = $(tdArray[10]).text();///小单 - 净占比
             var dataRow = {
-                C1: c1,
-                C2: c2,
-                C3: c3,
-                C4: c4,
-                C5: c5,
-                C6: c6,
-                C7: c7,
-                C8: c8,
-                C9: c9,
-                C10: c10,
-                C11: c11,
+                C1: TOOLS.Convertor.ToDate( c1.substring(0, 4) + "/" + c1.substring(4, 6) + "/" + c1.substring(6, 8)),
+                C2: Number(c2),
+                C3: Number(c3.replace("%","")),
+                C4: Number(c4),
+                C5: Number(c5),
+                C6: Number(c6),
+                C7: Number(c7.replace("%", "")),
+                C8: Number(c8),
+                C9: Number(c9.replace("%", "")),
+                C10: Number(c10),
+                C11: Number(c11.replace("%", "")),
             };
             fundsHistoryList.push(dataRow);
 
             ///数据组装
-            funds.HistoryList = fundsHistoryList;
+            funds.Column = { C1: "日期", C2: "收盘价", C3: "涨跌幅", C4: "资金净流入", C5: "5日主力净额", C6: "大单(主力) - 净额", C7: "大单(主力) - 净占比", C8: "中单 - 净额", C9: "中单 - 净占比", C10: "小单 - 净额", C11: "小单 - 净占比" };
+            funds.List = fundsHistoryList;
+
             return funds;
         }
 

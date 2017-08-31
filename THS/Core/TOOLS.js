@@ -12,6 +12,23 @@ var TOOLS = {
         GetTomorrow: function (dat) { },
         ///获取指定日期的昨天
         GetYesterday: function (dat) { }
+    },
+    Convertor: {
+        ToDate: function (input, defaultValue) {
+            input = input.replace('-', '/');
+            var res = new Date(Date.parse(input))
+            return res;
+        }
+    },
+    STR: {
+        LastSubString: function () { },
+        LastChar: function (input) {
+            var res = input.slice(-2, -1);
+        },
+        ///
+        SubStringReplace: function (startIndex,endIndex,replaceObj) {
+            
+        }
     }
 }
 
@@ -74,8 +91,9 @@ TOOLS.DATE.GetDateArray = function (count, startDate, formatter) {
         arr.push(nextDay);
     }
     return arr;
-
 }
+
+
 
 //-----------------------
 module.exports = TOOLS;

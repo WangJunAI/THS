@@ -39,6 +39,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Core\CONST.js" />
+    <Compile Include="Core\Convertor.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Core\DBIterator.js" />
     <Compile Include="Core\HttpService.js" />
     <Compile Include="Core\LocalService.js" />
