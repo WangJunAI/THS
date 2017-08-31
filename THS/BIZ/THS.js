@@ -1,4 +1,5 @@
 ﻿var MongoDB = require("../Core/MongoDB");
+var PARAM_CHECKER = require("../Core/PARAM_CHECKER");
 
 var $ = require('cheerio');
 var count = 0;
@@ -8,9 +9,13 @@ var THS = {
         var opt = MongoDB.GetEmptyOption();
         opt.url = "mongodb://192.168.0.140:27017/ths";
         var db = MongoDB.GetInst("ths", opt);
-        return db;
+        if (null === THS.DB) {
+            THS.DB = db;
+        }
+        return THS.DB;
     },
     Dict: {},
+    DB: null,
     SaveData: function (item) {
         if (undefined === THS.Dict[item.StockCode]) {
             THS.Dict[item.StockCode] = item;
@@ -26,8 +31,10 @@ var THS = {
             var data = THS.Dict[item.StockCode];
             delete THS.Dict[item.StockCode];
             var db = THS.GetDB();
-            db.Save("AnalysisData2", data, function () { }, 0);
+            db.Save("AnalysisData3", data, function () { }, 0);
         }
+        //var db = THS.GetDB();
+        //db.Save("AnalysisData3", item, function () { }, 0);
     },
     TraverseData: function () {
         var db = THS.GetDB();
@@ -36,17 +43,18 @@ var THS = {
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
             res.ContentType = data.ContentType;
-            console.log("正在处理 " + (++count) + "  " + res.StockCode + res.StockName);
+            console.log("Traverse 正在处理 " + (++count) + "  " + res.StockCode + res.StockName + " " + data.ContentType);
             if ("首页概览" === data.ContentType) {
                 var home = THS.AnalyseHome(data);
                 res.Home = home;
+                //THS.SaveData(res);
             }
             else if ("资金流向" === data.ContentType) {
                 var funds = THS.AnalyseFunds(data);
                 res.Funds = funds;
+                //THS.SaveData(res);
             }
-            else if ("公司资料" === data.ContentType)
-            {
+            else if ("公司资料" === data.ContentType) {
                 THS.AnalyseCompany(data);
             }
             else if ("新闻公告" === data.ContentType) {
@@ -75,7 +83,7 @@ var THS = {
             }
             else if ("行业分析" === data.ContentType) {
                 THS.AnalyseField(data);
-            } 
+            }
 
             //if (!(undefined === res.Home || null === res.Home) || !(undefined === res.Funds || null === res.Funds)) {
             //    db.Save("AnalysisData1", res, function () { }, 0);
@@ -93,12 +101,150 @@ var THS = {
     AnalyseHome: function (pageData) {
         var $page = $(pageData.Page);
         var home = {};
+
         ///公司概况
         var $company_details = $($page.find(".company_details"));
+        var company = { Key: [], Value: [] };
         var dt_dd = $company_details.children();
-        for (var i = 0; i < dt_dd.length/2; i++) {
-            console.log($(dt_dd[i]).text() + $(dt_dd[i + 1]).text());
+        for (var i = 0; i < dt_dd.length; i++) {
+            if (true === $(dt_dd[i]).is("dt")) {
+                company.Key.push($(dt_dd[i]).text().replace('：', ''));
+            }
+            else if (true === $(dt_dd[i]).is("dd")) {
+                company.Value.push($(dt_dd[i]).text());
+            }
         }
+
+        ///公司新闻
+        var gsxwLiArray = $page.find("[stat='f10_spqk_gsxw'] li");
+        var gsxw = [];
+        for (var i = 0; i < gsxwLiArray.length; i++) {
+            var li = gsxwLiArray[i];
+            var text = $(li).find("a").text();
+            var href = $(li).find("a").attr("href");
+            var date = $(li).find(".news_date").text();
+            var item = {
+                Text: text,
+                Href: href,
+                Date: date,
+            };
+
+            gsxw.push(item);
+        }
+
+
+        ///公司公告
+        var gsggLiArray = $page.find("[stat='f10_spqk_gsgg'] li");
+        var gsgg = [];
+        for (var i = 0; i < gsggLiArray.length; i++) {
+            var li = gsggLiArray[i];
+            var text = $(li).find("a").text();
+            var href = $(li).find("a").attr("href");
+            var date = $(li).find(".news_date").text();
+            var item = {
+                Text: text,
+                Href: href,
+                Date: date,
+            };
+
+            gsgg.push(item);
+        }
+
+        ///行业资讯
+        var hyzxLiArray = $page.find("[stat='f10_spqk_hyzx'] li");
+        var hyzx = [];
+        for (var i = 0; i < hyzxLiArray.length; i++) {
+            var li = hyzxLiArray[i];
+            var text = $(li).find("a").text();
+            var href = $(li).find("a").attr("href");
+            var date = $(li).find(".news_date").text();
+            var item = {
+                Text: text,
+                Href: href,
+                Date: date,
+            };
+
+            hyzx.push(item);
+        }
+
+        ///研究报告
+        var yjbgLiArray = $page.find("[stat='f10_spqk_yjbg'] li");
+        var yjbg = [];
+        for (var i = 0; i < yjbgLiArray.length; i++) {
+            var li = yjbgLiArray[i];
+            var text = $(li).find("a").text();
+            var href = $(li).find("a").attr("href");
+            var date = $(li).find(".news_date").text();
+            var item = {
+                Text: text,
+                Href: href,
+                Date: date,
+            };
+
+            yjbg.push(item);
+        }
+
+
+
+        ///大宗交易
+        var dzjyTrArray = $page.find("#deal tbody  tr"); ///大宗交易
+        var dzjy = [];
+        for (var i = 0; i < dzjyTrArray.length; i++) {
+            var tr = dzjyTrArray[i];
+            if (PARAM_CHECKER.IsArray(tr) && 7 === tr.length) {
+                var c1 = $(tr[0]).text();///交易日期
+                var c2 = $(tr[1]).text();///成交价(元)
+                var c3 = $(tr[2]).text();///成交金额(万元)
+                var c4 = $(tr[3]).text();///成交量(万股)
+                var c5 = $(tr[4]).text();///溢价率
+                var c6 = $(tr[5]).text();///买入营业部
+                var c7 = $(tr[7]).text();///卖出营业部
+
+                var item = {
+                    C1: c1,
+                    C2: c2,
+                    C3: c3,
+                    C4: c4,
+                    C5: c5,
+                    C6: c6,
+                    C7: c7,
+                };
+
+                dzjy.push(item);
+            }
+        }
+
+        ///融资融券
+        var rzrqTrArray = $page.find("#margin tbody  tr"); ///今日龙虎榜数据  
+        var rzrq = [];
+        for (var i = 0; i < rzrqTrArray.length; i++) {
+            var tr = dzjyTrArray[i];
+            if (PARAM_CHECKER.IsArray(tr) && 8 === tr.length) {
+                var c1 = $(tr[0]).text();///交易日期
+                var c2 = $(tr[1]).text();///融资余额(亿元)
+                var c3 = $(tr[2]).text();///融资余额/流通市值
+                var c4 = $(tr[3]).text();///融资买入额(亿元)
+                var c5 = $(tr[4]).text();///融券卖出量(万股)
+                var c6 = $(tr[5]).text();///融券余量(万股)
+                var c7 = $(tr[6]).text();///融券余额(万元)
+                var c8 = $(tr[7]).text();///融资融券余额(亿元)
+
+                var item = {
+                    C1: c1,
+                    C2: c2,
+                    C3: c3,
+                    C4: c4,
+                    C5: c5,
+                    C6: c6,
+                    C7: c7,
+                    C8: c8
+                };
+
+                rzrq.push(item);
+            }
+        }
+
+
 
         ///龙虎榜概要信息
         var $lhbTodayTrArray = $page.find("#ml_001 tbody  tr"); ///今日龙虎榜数据  
@@ -149,15 +295,22 @@ var THS = {
 
 
         home = {
-            LHB: {
+            Company: company, ///公司概况
+            GSXW: gsxw,///公司新闻
+            GSGG: gsgg,///公司公告
+            HYZX: hyzx,///行业资讯
+            YJBG: yjbg,///研究报告
+            DZJY: dzjy,///大宗交易
+            RZRQ: rzrq,///融资融券
+            LHB: {///龙虎榜
                 Today: lhbToday,
-                Yesterday:lhbYesterday
+                Yesterday: lhbYesterday
             }
         };
 
         return home;
 
-       // console.log($(company_details).html()); ///这个会有编码问题
+        // console.log($(company_details).html()); ///这个会有编码问题
     },
     ///分析资金流向数据
     AnalyseFunds: function (pageData) {
@@ -199,9 +352,9 @@ var THS = {
             funds.HistoryList = fundsHistoryList;
             return funds;
         }
-         
 
-        
+
+
 
 
         // console.log($(company_details).html()); ///这个会有编码问题

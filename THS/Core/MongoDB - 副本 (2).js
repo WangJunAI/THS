@@ -93,9 +93,9 @@ var MongoDB = {
                     var callback = queueItem.callback;
                     var retryCount = queueItem.retryCount;
                     
-                    //if (PARAM_CHECKER.IsValid(jsonData._sourceDataId)) {
-                    //    console.log("正处理 "+ jsonData._sourceDataId+"  日志深度"+ _THIS.QueueLog.length);
-                    //}
+                    if (PARAM_CHECKER.IsValid(jsonData._sourceDataId)) {
+                        console.log("正处理 "+ jsonData._sourceDataId+"  日志深度"+ _THIS.QueueLog.length);
+                    }
 
                     if (!PARAM_CHECKER.IsValid(jsonData.CreateTime)) {
                         ///设置创建时间
@@ -128,8 +128,7 @@ var MongoDB = {
                         }
                         else {
                             _THIS.Status = 0;
-                            console.log(_THIS._url + " 保存失败- " + _THIS.QueneIN.length + " - " + JSON.stringify(saveErr));
-                            throw saveErr;
+                            console.log(_THIS._url+" 保存失败- " + _THIS.QueneIN.length + " - " + JSON.stringify(saveErr));
                         }
                         
                         if (PARAM_CHECKER.IsFunction(callback)) {
@@ -147,10 +146,8 @@ var MongoDB = {
                             db.close();
                     }
                     catch (closeErr) {
-                        //_THIS.QueueLog.push(closeErr);
+                        _THIS.QueueLog.push(closeErr);
                         console.log(closeErr);
-
-                        throw closeErr;
                     }
  
                     console.log(_THIS._url +" 队列已空 " + " - " + _THIS.Status+"  "+ _THIS.QueneIN.length);
@@ -167,7 +164,7 @@ var MongoDB = {
                     db.close();
                 }
                 catch (closeErr) {
-                    throw closeErr;
+                    _THIS.QueueLog.push(closeErr);
                     console.log(closeErr);
                 }
 
@@ -499,5 +496,43 @@ var MongoDB = {
 }
 
 //导出函数*****************************//
-///保存 
-module.exports = MongoDB;
+///保存
+exports.Save = function (collectionName , jsonData, callback, retryCount) {
+    var res = MongoDB.Save(collectionName , jsonData, callback, retryCount);
+    return res;
+}
+
+exports.Update = function (collectionName , jsonData, callback, retryCount) {
+    var res = MongoDB.Update(collectionName , jsonData, callback, retryCount);
+    return res;
+}
+
+///加载一个集合
+exports.LoadCollection= function (collectionName , jsonData, pageIndex , pageSize, callbackData, callbackEnd, callbackError) { 
+    var res = MongoDB.LoadCollection(collectionName , jsonData, pageIndex , pageSize, callbackData, callbackEnd, callbackError);
+    return res;
+}
+exports.GetInst = function (name,option) { 
+    return MongoDB.GetInst(name, option);
+}
+
+///删除
+exports.Remove = function (collectionName , jsonData, callback, retryCount) {
+    var res = MongoDB.Remove(collectionName , jsonData, callback, retryCount);
+    return res;
+}
+
+///获取一个空白的配置信息
+exports.GetEmptyOption = function () {
+    return MongoDB.GetEmptyOption();
+}
+
+///遍历一个集合
+exports.TraverseCollection = function (collectionName, jsonData, callbackData, callbackEnd, callbackError) {
+    return MongoDB.Traverse(collectionName, jsonData, callbackData, callbackEnd, callbackError);
+}
+
+exports.Traverse = function (collectionName, jsonData, callbackData, callbackEnd, callbackError) {
+    return MongoDB.Traverse(collectionName, jsonData, callbackData, callbackEnd, callbackError);
+}
+
