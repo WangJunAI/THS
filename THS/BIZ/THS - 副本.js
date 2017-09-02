@@ -17,7 +17,7 @@ var THS = {
     },
     Dict: {},
     DB: null,
-    SavePageData: function (item) {
+    SaveData: function (item) {
         if (undefined === THS.Dict[item.StockCode]) {
             THS.Dict[item.StockCode] = item;
         }
@@ -34,71 +34,62 @@ var THS = {
             var db = THS.GetDB();
             db.Save("AnalysisData5", data, function () { }, 0);
         }
+        //var db = THS.GetDB();
+        //db.Save("AnalysisData3", item, function () { }, 0);
     },
-    TraversePage: function () {
+    TraverseData: function () {
         var db = THS.GetDB();
         db.Traverse("Page", {}, function (data) {
             var res = {};
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
             res.ContentType = data.ContentType;
-            console.log("Traverse 正在分析页面 " + (++count) + "  " + res.StockCode + res.StockName + " " + data.ContentType);
+            console.log("Traverse 正在处理 " + (++count) + "  " + res.StockCode + res.StockName + " " + data.ContentType);
             if ("首页概览" === data.ContentType) {
-                var home = THS.AnalysePageHome(data);
+                var home = THS.AnalyseHome(data);
                 res.Home = home;
+                //THS.SaveData(res);
             }
             else if ("资金流向" === data.ContentType) {
-                var funds = THS.AnalysePageFunds(data);
+                var funds = THS.AnalyseFunds(data);
                 res.Funds = funds;
+                //THS.SaveData(res);
             }
             else if ("公司资料" === data.ContentType) {
-                THS.AnalysePageCompany(data);
+                THS.AnalyseCompany(data);
             }
             else if ("新闻公告" === data.ContentType) {
-                THS.AnalysePageNews(data);
+                THS.AnalyseNews(data);
             }
             else if ("财务分析" === data.ContentType) {
-                THS.AnalysePageFinance(data);
+                THS.AnalyseFinance(data);
             }
             else if ("经营分析" === data.ContentType) {
-                THS.AnalysePageOperate(data);
+                THS.AnalyseOperate(data);
             }
             else if ("股东股本" === data.ContentType) {
-                THS.AnalysePageHolder(data);
+                THS.AnalyseHolder(data);
             }
             else if ("主力持仓" === data.ContentType) {
-                THS.AnalysePagePosition(data);
+                THS.AnalysePosition(data);
             }
             else if ("公司大事" === data.ContentType) {
-                THS.AnalysePageEvent(data);
+                THS.AnalyseEvent(data);
             }
             else if ("分红融资" === data.ContentType) {
-                THS.AnalysePageBonus(data);
+                THS.AnalyseBonus(data);
             }
             else if ("价值分析" === data.ContentType) {
-                THS.AnalysePageWorth(data);
+                THS.AnalyseWorth(data);
             }
             else if ("行业分析" === data.ContentType) {
-                THS.AnalysePageField(data);
-            } 
+                THS.AnalyseField(data);
+            }
 
-            THS.SavePageData(res);
-
-        }, function (endMsg) {
-            console.log("遍历结束");
-        }, function (errMsg) {
-            console.log("出错");
-        });
-    },
-
-    TraverseData: function () {
-        var db = THS.GetDB();
-        db.Traverse("AnalysisData5", {}, function (data) {
-            var res = {};
-            res.StockCode = data.StockCode;
-            res.StockName = data.StockName;
-            console.log("Traverse 正在分析数据 " + (++count) + "  " + res.StockCode + res.StockName );
-            THS.AnalyseData(data);
+            //if (!(undefined === res.Home || null === res.Home) || !(undefined === res.Funds || null === res.Funds)) {
+            //    db.Save("AnalysisData1", res, function () { }, 0);
+            //}
+            THS.SaveData(res);
 
         }, function (endMsg) {
             console.log("遍历结束");
@@ -108,7 +99,7 @@ var THS = {
     },
 
     ///分析首页概览数据
-    AnalysePageHome: function (pageData) {
+    AnalyseHome: function (pageData) {
         var $page = $(pageData.Page);
         var home = {};
 
@@ -390,7 +381,7 @@ var THS = {
         // console.log($(company_details).html()); ///这个会有编码问题
     },
     ///分析资金流向数据
-    AnalysePageFunds: function (pageData) {
+    AnalyseFunds: function (pageData) {
         var $page = $(pageData.Page);
         var funds = {};
         ///历史资金数据一览
@@ -440,60 +431,54 @@ var THS = {
     },
 
     ///分析公司资料数据
-    AnalysePageCompany: function (pageData) {
+    AnalyseCompany: function (pageData) {
 
     },
 
     ///分析新闻公告数据
-    AnalysePageNews: function (pageData) {
+    AnalyseNews: function (pageData) {
 
     },
 
     ///分析财务分析数据
-    AnalysePageFinance: function (pageData) {
+    AnalyseFinance: function (pageData) {
 
     },
 
     ///分析经营分析数据
-    AnalysePageOperate: function (pageData) {
+    AnalyseOperate: function (pageData) {
 
     },
 
     ///分析股东股本数据
-    AnalysePageHolder: function (pageData) {
+    AnalyseHolder: function (pageData) {
 
     },
 
     ///分析主力持仓数据
-    AnalysePagePosition: function (pageData) {
+    AnalysePosition: function (pageData) {
 
     },
 
     ///分析公司大事数据
-    AnalysePageEvent: function (pageData) {
+    AnalyseEvent: function (pageData) {
 
     },
 
     ///分析分红融资数据
-    AnalysePageBonus: function (pageData) {
+    AnalyseBonus: function (pageData) {
 
     },
 
     ///分析价值分析数据
-    AnalysePageWorth: function (pageData) {
+    AnalyseWorth: function (pageData) {
 
     },
 
     ///分析行业分析数据
-    AnalysePageField: function (pageData) {
+    AnalyseField: function (pageData) {
 
     },
-    AnalyseDataDict: {},
-    ///数据分析
-    AnalyseData: function (data) {
-
-
-    }
 
 }
 

@@ -11,6 +11,7 @@ res = tool.DATE.GetDateArray();
 var news = require("./BIZ/NEWS");
 //news.Load();
 var ths = require("./BIZ/THS");
+//ths.TraversePage();
 ths.TraverseData();
 
 console.log('Hello world');

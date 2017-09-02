@@ -149,7 +149,6 @@ var MongoDB = {
                     catch (closeErr) {
                         //_THIS.QueueLog.push(closeErr);
                         console.log(closeErr);
-
                         throw closeErr;
                     }
  
@@ -161,17 +160,16 @@ var MongoDB = {
  
                 }
             }
-            else {
+            else if (null != db && "function" === typeof(db.close)){
                 _THIS.Status = 0;
                 try {
                     db.close();
                 }
                 catch (closeErr) {
+                    console.log("closeErr " + closeErr + " connectionErr" + connectionErr);
                     throw closeErr;
-                    console.log(closeErr);
                 }
-
-                console.log("异常" + JSON.stringify(connectionErr) + "-" + _THIS.Status);
+                console.log("数据库连接打开异常" + JSON.stringify(connectionErr) + "-" + _THIS.Status);
             }
         });
     },
