@@ -18,6 +18,13 @@ var TOOLS = {
             input = input.replace('-', '/');
             var res = new Date(Date.parse(input))
             return res;
+        },
+        ///字典转数组
+        DictToArray: function (dictData) {
+            var arr = [];
+            for (var item in dictData) {
+
+            }
         }
     },
     STR: {

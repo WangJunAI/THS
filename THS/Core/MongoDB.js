@@ -336,6 +336,12 @@ var MongoDB = {
         });
     },
 
+    CreateEmptyFilter: function () {
+        var json = {};
+
+
+    },
+
     ///遍历一个集合
     Traverse: function (collectionName , jsonData,callbackData, callbackEnd, callbackError) {
         var loader = MongoDB.GetLoader();
@@ -366,11 +372,11 @@ var MongoDB = {
                 if (checker.IsObject(jsonData._Sort)) {
                     var sortFilter = jsonData._Sort;
                     delete jsonData._Sort;
-                    cursor = collection.find().sort(sortFilter);
+                    cursor = collection.find(jsonData).sort(sortFilter);
                     
                 }
                 else {
-                    cursor = collection.find();
+                    cursor = collection.find(jsonData);
                 }
                 
                 cursor.on("data", function (data) {

@@ -15,6 +15,32 @@ var THS = {
         }
         return THS.DB;
     },
+    Const: {
+        Collection: {
+            Page: "Page0902", ///原始页面,
+            PageData: "PageData0902",///页面一级提取数据
+            Log: "Log0902",///性能日志
+            AnalysisResult:"AnalysisResult0902",
+        }
+    },
+    Log: {
+        data: {},
+        ///开始计时
+        Start: function (name) {
+            THS.Log.data[name] = { StartTime: new Date() };
+        },
+        ///
+        Stop: function (name) {
+            THS.Log.data[name].StopTime = new Date();
+            THS.Log.data[name].Name = name;
+            THS.Log.data[name].Name = THS.Log.data[name].StopTime - THS.Log.data[name].StartTime;
+            var collectionName = THS.Const.Collection.Log;
+            var db = THS.GetDB();
+            db.Save(collectionName, THS.Log.data[name], function () {
+                delete THS.Log.data[name];
+            }, 0);
+        }
+    },
     Dict: {},
     DB: null,
     SavePageData: function (item) {
@@ -29,15 +55,21 @@ var THS = {
         }
 
         if (undefined != THS.Dict[item.StockCode].Home && undefined != THS.Dict[item.StockCode].Funds) {
+            var collectionName = THS.Const.Collection.PageData;///原始页面所在集合
             var data = THS.Dict[item.StockCode];
             delete THS.Dict[item.StockCode];
             var db = THS.GetDB();
-            db.Save("AnalysisData5", data, function () { }, 0);
+            db.Save(collectionName, data, function () { }, 0);
         }
     },
     TraversePage: function () {
         var db = THS.GetDB();
-        db.Traverse("Page", {}, function (data) {
+        var collectionName = THS.Const.Collection.Page;///原始页面所在集合
+
+        ///日志计时
+        THS.Log.Start("页面遍历TraversePage");
+
+        db.Traverse(collectionName, {  }, function (data) {
             var res = {};
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
@@ -86,21 +118,29 @@ var THS = {
 
         }, function (endMsg) {
             console.log("遍历结束");
+            THS.Log.Stop("页面遍历TraversePage");
         }, function (errMsg) {
             console.log("出错");
         });
     },
 
+    ///页面数据分析
     TraverseData: function () {
+        ///日志计时
+        THS.Log.Start("页面数据遍历TraverseData");
+
         var db = THS.GetDB();
-        db.Traverse("AnalysisData5", {}, function (data) {
+        var collectionName = THS.Const.Collection.PageData;
+        db.Traverse(collectionName, {}, function (data) {
             var res = {};
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
-            console.log("Traverse 正在分析数据 " + (++count) + "  " + res.StockCode + res.StockName );
+            console.log("TraverseData 正在分析数据 " + (++count) + "  " + res.StockCode + res.StockName );
             THS.AnalyseData(data);
 
         }, function (endMsg) {
+            THS.Log.Stop("页面数据遍历TraverseData");
+            THS.AnalyseDataDict.SaveData(); ///将分析结果写入数据库
             console.log("遍历结束");
         }, function (errMsg) {
             console.log("出错");
@@ -217,14 +257,15 @@ var THS = {
         var dzjy = [];
         for (var i = 0; i < dzjyTrArray.length; i++) {
             var tr = dzjyTrArray[i];
-            if (PARAM_CHECKER.IsArray(tr) && 7 === tr.length) {
-                var c1 = $(tr[0]).text();///交易日期
-                var c2 = $(tr[1]).text();///成交价(元)
-                var c3 = $(tr[2]).text();///成交金额(万元)
-                var c4 = $(tr[3]).text();///成交量(万股)
-                var c5 = $(tr[4]).text();///溢价率
-                var c6 = $(tr[5]).text();///买入营业部
-                var c7 = $(tr[7]).text();///卖出营业部
+            var tdArr = $(tr).children();
+            if (7 === tdArr.length) {
+                var c1 = $(tdArr[0]).text();///交易日期
+                var c2 = $(tdArr[1]).text();///成交价(元)
+                var c3 = $(tdArr[2]).text();///成交金额(万元)
+                var c4 = $(tdArr[3]).text();///成交量(万股)
+                var c5 = $(tdArr[4]).text();///溢价率
+                var c6 = $(tdArr[5]).text();///买入营业部
+                var c7 = $(tdArr[6]).text();///卖出营业部
 
                 var item = {
                     C1: TOOLS.Convertor.ToDate(c1),
@@ -244,16 +285,17 @@ var THS = {
         var rzrqTrArray = $page.find("#margin tbody  tr"); ///今日龙虎榜数据  
         var rzrq = [];
         for (var i = 0; i < rzrqTrArray.length; i++) {
-            var tr = dzjyTrArray[i];
-            if (PARAM_CHECKER.IsArray(tr) && 8 === tr.length) {
-                var c1 = $(tr[0]).text();///交易日期
-                var c2 = $(tr[1]).text();///融资余额(亿元)
-                var c3 = $(tr[2]).text();///融资余额/流通市值
-                var c4 = $(tr[3]).text();///融资买入额(亿元)
-                var c5 = $(tr[4]).text();///融券卖出量(万股)
-                var c6 = $(tr[5]).text();///融券余量(万股)
-                var c7 = $(tr[6]).text();///融券余额(万元)
-                var c8 = $(tr[7]).text();///融资融券余额(亿元)
+            var tr = rzrqTrArray[i];
+            var tdArr = $(tr).children();
+            if (8 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///交易日期
+                var c2 = $(tdArr[1]).text();///融资余额(亿元)
+                var c3 = $(tdArr[2]).text();///融资余额/流通市值
+                var c4 = $(tdArr[3]).text();///融资买入额(亿元)
+                var c5 = $(tdArr[4]).text();///融券卖出量(万股)
+                var c6 = $(tdArr[5]).text();///融券余量(万股)
+                var c7 = $(tdArr[6]).text();///融券余额(万元)
+                var c8 = $(tdArr[7]).text();///融资融券余额(亿元)
 
                 var item = {
                     C1: TOOLS.Convertor.ToDate(c1),
@@ -488,9 +530,88 @@ var THS = {
     AnalysePageField: function (pageData) {
 
     },
-    AnalyseDataDict: {},
+    AnalyseDataDict: {
+        Intro:"",
+        Area: {
+            Name: "地域分布",
+            Result: {}
+        },
+        Conception: {
+            Name: "概念分布",
+            Result: {}
+        },
+
+        MainBusiness: {
+            Name: "主营业务分布",
+            Result: {}
+        },
+
+        ///添加到主营业务维度
+        AddToArea: function (stockCode, stockName,areaName) {
+            ///添加到地域维度
+            if (undefined === THS.AnalyseDataDict.Area.Result[areaName]) {
+                ///若没有定义,则初始化
+                THS.AnalyseDataDict.Area.Result[areaName] = [];
+            }
+            THS.AnalyseDataDict.Area.Result[areaName].push({ StockCode: stockCode, StockName: stockName });
+        },
+        ///添加到概念维度
+        AddToConception: function (stockCode, stockName, conceptionString) {
+
+            var conceptionArray = conceptionString.split('，');
+
+            for (var i = 0; i < conceptionArray.length; i++) {
+                var conception = conceptionArray[i].trim().replace('.','_');
+                ///添加到概念维度
+                if (undefined === THS.AnalyseDataDict.Conception.Result[conception]) {
+                    ///若没有定义,则初始化
+                    THS.AnalyseDataDict.Conception.Result[conception] = [];
+                }
+                THS.AnalyseDataDict.Conception.Result[conception].push({ StockCode: stockCode, StockName: stockName });
+            }
+        },
+
+        ///添加到主营业务维度
+        AddToMainBusiness: function (stockCode, stockName,businessString) {
+            var businessArray = businessString.split(/[,。.;；、]/);
+
+            for (var i = 0; i < businessArray.length; i++) {
+                var business = businessArray[i].trim().replace('.', '_');
+                //console.log(stockCode + "  " + stockName + " " + business);
+                ///添加到主营业务维度
+                if ("" != business) {
+                    if (undefined === THS.AnalyseDataDict.MainBusiness.Result[business]) {
+                        ///若没有定义,则初始化
+                        THS.AnalyseDataDict.MainBusiness.Result[business] = [];
+                    }
+                    THS.AnalyseDataDict.MainBusiness.Result[business].push({ StockCode: stockCode, StockName: stockName });
+                }
+            }
+        },
+
+        ///
+        SaveData: function () {
+            var db = THS.GetDB();
+            var collectionName = THS.Const.Collection.AnalysisResult;
+            db.Save(collectionName, THS.AnalyseDataDict, function () { console.log("分析数据保存完毕")}, 0);
+        }
+
+
+    },
     ///数据分析
     AnalyseData: function (data) {
+        var stockCode = data.StockCode;
+        var stockName = data.StockName;
+
+        var company = data.Home.Company.Value; ///公司基本信息，数组
+        var lhb = data.Home.LHB;///龙虎榜
+        var dzjy = data.Home.DZJY;///大宗交易
+        var rzrq = data.Home.RZRQ;///融资融券
+
+        THS.AnalyseDataDict.AddToArea(stockCode,stockName,company[0]);///地域维度分析
+        THS.AnalyseDataDict.AddToConception(stockCode, stockName, company[1]);///概念维度分析
+        THS.AnalyseDataDict.AddToMainBusiness(stockCode, stockName, company[3]);///概念维度分析
+
 
 
     }
