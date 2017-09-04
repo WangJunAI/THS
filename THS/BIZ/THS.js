@@ -17,10 +17,11 @@ var THS = {
     },
     Const: {
         Collection: {
-            Page: "Page0902", ///原始页面,
-            PageData: "PageData0902",///页面一级提取数据
-            Log: "Log0902",///性能日志
-            AnalysisResult:"AnalysisResult0902",
+            Tag:"0903",
+            Page: "Page" +"0903", ///原始页面,
+            PageData: "PageData" + "0903",///页面一级提取数据
+            Log: "Log" + "0903",///性能日志
+            AnalysisResult: "AnalysisResult" +"0903",
         }
     },
     Log: {
@@ -272,9 +273,9 @@ var THS = {
                     C2: Number(c2),
                     C3: Number(c3),
                     C4: Number(c4),
-                    C5: Number(c5),
-                    C6: Number(c6),
-                    C7: Number(c7),
+                    C5: Number(c5.replace('%','')),
+                    C6: c6,
+                    C7: c7,
                 };
 
                 dzjy.push(item);
@@ -300,7 +301,7 @@ var THS = {
                 var item = {
                     C1: TOOLS.Convertor.ToDate(c1),
                     C2: Number(c2),
-                    C3: Number(c3),
+                    C3: Number(c3.replace('%', '')),
                     C4: Number(c4),
                     C5: Number(c5),
                     C6: Number(c6),
@@ -545,7 +546,102 @@ var THS = {
             Name: "主营业务分布",
             Result: {}
         },
+        EarningsShare: {
+            Name: "每股收益分布",
+            Result: {
+                "负值": [],///0
+                "2毛以下": [],///
+                "2至5毛": [],
+                "5毛1元": [],
+                "1元以上": [],
+            },
+            Coefficient: {
+                "负值": 0,
+                "2毛以下": 20,
+                "2至5毛": 50,
+                "5毛1元": 100,
+                "1元以上": 200,
+            }
+        },
+        NetProfitGrowthRate: {
+            Name: "净利润增长率分布",
+            Result: {
+                "负值": [],
+                "0至10%": [],
+                "10%至30%": [],
+                "30%至50%": [],
+                "50%至100%": [],
+                "100%至300%": [],
+                "300%及以上": [],
+            },
+            Coefficient: {
+                "负值": 0,
+                "0至10%":10,
+                "10%至30%": 20,
+                "30%至50%": 50,
+                "50%至100%": 100,
+                "100%至300%": 200,
+                "300%及以上": 500,
+            }
+        },
+        CashFlowShare: {
+            Name: "每股现金流",
+            Result: {
+                "负值": [],
+                "5毛以下": [],
+                "5毛1元": [],
+                "1至2元": [],
+                "2元以上": [],
+            },
+            Coefficient: {
+                "负值": 0,
+                "5毛以下": 20,
+                "5毛1元": 50,
+                "1至2元": 100,
+                "2元以上": 200,
+            }
+        },
+        LHB: {
+            Name: "龙虎榜二日净买入数据分析",///分析两天内净买入量
+            Result: {
+                "负值": [],
+                "2000万以下": [],
+                "2000万至5000万": [],
+                "5000万以上": [],
+            },
+            Coefficient: {
+                "负值":0,
+                "2000万以下": 20,
+                "2000万至5000万": 50,
+                "5000万以上": 100,
+            }
+        },
 
+        BlockTrade: {
+            Name: "大宗交易",///
+            Result: {
+                "负值": [],
+                "正值": [],
+            },
+            Coefficient: {
+                "负值": -50,
+                "正值": 50,
+            }
+        },
+
+        MarginTrading: {
+            Name: "融资融券",
+            Result: {
+                "增长": [],
+                "减少": [],
+            },
+            Coefficient: {
+                "增长": 50,
+                "减少": -50,
+            }
+        },
+        RecommendationDict: {
+        },
         ///添加到主营业务维度
         AddToArea: function (stockCode, stockName,areaName) {
             ///添加到地域维度
@@ -589,11 +685,234 @@ var THS = {
             }
         },
 
-        ///
-        SaveData: function () {
+        ///添加到每股收益维度 负值,0-2,2-5,5-10,10以上
+        AddToEarningsShare: function (stockCode, stockName, earnings) {
+            ///初始化
+            if (earnings<0) {
+                THS.AnalyseDataDict.EarningsShare.Result["负值"].push({ StockCode: stockCode, StockName: stockName, Earnings:earnings });
+            }
+            else if (0 < earnings && earnings<=0.2) {
+                THS.AnalyseDataDict.EarningsShare.Result["2毛以下"].push({ StockCode: stockCode, StockName: stockName, Earnings:earnings });
+            }
+            else if (0.2 < earnings && earnings <= 0.5) {
+                THS.AnalyseDataDict.EarningsShare.Result["2至5毛"].push({ StockCode: stockCode, StockName: stockName, Earnings:earnings });
+            }
+            else if (0.5 < earnings && earnings <= 1.0) {
+                THS.AnalyseDataDict.EarningsShare.Result["5毛1元"].push({ StockCode: stockCode, StockName: stockName, Earnings:earnings });
+            }
+            else if (1.0 < earnings ) {
+                THS.AnalyseDataDict.EarningsShare.Result["1元以上"].push({ StockCode: stockCode, StockName: stockName, Earnings:earnings });
+            }
+        },
+
+        ///添加到净利润增长率
+        AddToNetProfitGrowthRate: function (stockCode, stockName, netProfitGrowthRate) {
+            ///初始化
+            if (netProfitGrowthRate < 0) {
+                THS.AnalyseDataDict.NetProfitGrowthRate.Result["负值"].push({ StockCode: stockCode, StockName: stockName, NetProfitGrowthRate: netProfitGrowthRate });
+            }
+            else if (0 * 0.01 < netProfitGrowthRate && netProfitGrowthRate <= 10 * 0.01) {
+                THS.AnalyseDataDict.NetProfitGrowthRate.Result["0至10%"].push({ StockCode: stockCode, StockName: stockName, NetProfitGrowthRate: netProfitGrowthRate });
+            }
+            else if (10 * 0.01 < netProfitGrowthRate && netProfitGrowthRate <= 30 * 0.01) {
+                THS.AnalyseDataDict.NetProfitGrowthRate.Result["10%至30%"].push({ StockCode: stockCode, StockName: stockName, NetProfitGrowthRate: netProfitGrowthRate });
+            }
+            else if (30 * 0.01 < netProfitGrowthRate && netProfitGrowthRate <= 50 * 0.01) {
+                THS.AnalyseDataDict.NetProfitGrowthRate.Result["30%至50%"].push({ StockCode: stockCode, StockName: stockName, NetProfitGrowthRate: netProfitGrowthRate });
+            }
+            else if (50 * 0.01 < netProfitGrowthRate && netProfitGrowthRate <= 100 * 0.01) {
+                THS.AnalyseDataDict.NetProfitGrowthRate.Result["50%至100%"].push({ StockCode: stockCode, StockName: stockName, NetProfitGrowthRate: netProfitGrowthRate });
+            }
+            else if (100 * 0.01 < netProfitGrowthRate && netProfitGrowthRate <= 300 * 0.01) {
+                THS.AnalyseDataDict.NetProfitGrowthRate.Result["100%至300%"].push({ StockCode: stockCode, StockName: stockName, NetProfitGrowthRate: netProfitGrowthRate });
+            }
+            else if (300 * 0.01 < netProfitGrowthRate) {
+                THS.AnalyseDataDict.NetProfitGrowthRate.Result["300%及以上"].push({ StockCode: stockCode, StockName: stockName, NetProfitGrowthRate: netProfitGrowthRate });
+            }
+        },
+
+        ///添加到每股现金流维度
+        AddToCashFlowShare: function (stockCode, stockName, cashFlowShare) {
+            ///初始化
+            if (cashFlowShare < 0) {
+                THS.AnalyseDataDict.CashFlowShare.Result["负值"].push({ StockCode: stockCode, StockName: stockName, CashFlowShare: cashFlowShare });
+            }
+            else if (0 < cashFlowShare && cashFlowShare <= 0.5) {
+                THS.AnalyseDataDict.CashFlowShare.Result["5毛以下"].push({ StockCode: stockCode, StockName: stockName, CashFlowShare: cashFlowShare });
+            }
+            else if (0.5 < cashFlowShare && cashFlowShare <= 1.0) {
+                THS.AnalyseDataDict.CashFlowShare.Result["5毛1元"].push({ StockCode: stockCode, StockName: stockName, CashFlowShare: cashFlowShare });
+            }
+            else if (1.0 < cashFlowShare && cashFlowShare <= 2.0) {
+                THS.AnalyseDataDict.CashFlowShare.Result["1至2元"].push({ StockCode: stockCode, StockName: stockName, CashFlowShare: cashFlowShare });
+            }
+            else if (2.0 < cashFlowShare) {
+                THS.AnalyseDataDict.CashFlowShare.Result["2元以上"].push({ StockCode: stockCode, StockName: stockName, CashFlowShare: cashFlowShare });
+            }
+        },
+
+        ///添加到龙虎榜分析
+        AddToLHB: function (stockCode, stockName, lhb) {
+
+            if (0 < lhb.Today.length && 0 < lhb.Yesterday.length) ///连续两天都有动作
+            {
+                var todayMMJC = lhb.TodayCal.MMJC;
+                var yesterdayMMJC = lhb.YestodayCal.MMJC;
+                var mmjc = (todayMMJC + yesterdayMMJC);
+                if (mmjc < 0) {
+                    THS.AnalyseDataDict.LHB.Result["负值"].push({ StockCode: stockCode, StockName: stockName, LHBMMJC: mmjc });
+                }
+                else if (0 < mmjc && mmjc <= 2000) {
+                    THS.AnalyseDataDict.LHB.Result["2000万以下"].push({ StockCode: stockCode, StockName: stockName, LHBMMJC: mmjc });
+                }
+                else if (2000 < mmjc && mmjc <= 5000) {
+                    THS.AnalyseDataDict.LHB.Result["2000万至5000万"].push({ StockCode: stockCode, StockName: stockName, LHBMMJC: mmjc });
+                }
+                else if (5000 < mmjc) {
+                    THS.AnalyseDataDict.LHB.Result["5000万以上"].push({ StockCode: stockCode, StockName: stockName, LHBMMJC: mmjc });
+                }
+            }
+        },
+
+        ///添加到大宗交易
+        AddToBlockTrade: function (stockCode, stockName, blockTrade) {
+            if (0 < blockTrade.length) ///若最近有大宗交易
+            {
+                var curBlockTrade = blockTrade[0].C1; 
+                var premiumRate = blockTrade[0].C5;
+                if (((new Date() - curBlockTrade) / 1000 / 3600 / 24) < 7)///七天之内
+                if (premiumRate < 0) {
+                    THS.AnalyseDataDict.BlockTrade.Result["负值"].push({ StockCode: stockCode, StockName: stockName, PremiumRate: premiumRate });
+                }
+                else if (0 < premiumRate) {
+                    THS.AnalyseDataDict.BlockTrade.Result["正值"].push({ StockCode: stockCode, StockName: stockName, PremiumRate: premiumRate });
+                }
+            }
+        },
+
+        ///添加到融资融券
+        AddToMarginTrading: function (stockCode, stockName, marginTrading) {
+            if (0 < marginTrading.length) ///若最近有融资融券
+            {
+                var first = marginTrading[0].C3;
+                var last = marginTrading[marginTrading.length - 1].C3;
+                var proportion = first - last;
+                if (proportion < 0) {
+                    THS.AnalyseDataDict.MarginTrading.Result["减少"].push({ StockCode: stockCode, StockName: stockName, Proportion: proportion });
+                }
+                else if (0 < proportion) {
+                    THS.AnalyseDataDict.MarginTrading.Result["增长"].push({ StockCode: stockCode, StockName: stockName, Proportion: proportion });
+                }
+            }
+        },
+
+        ///生成推荐值
+        CreateRecommendedValue: function () {
+            var earningsShare = this.EarningsShare.Result;
+            var netProfitGrowthRate = this.NetProfitGrowthRate.Result;
+            var cashFlowShare = this.CashFlowShare.Result;
+            var lhb = this.LHB.Result;
+            var blockTrade = this.BlockTrade.Result;
+            var marginTrading = this.MarginTrading.Result;
+
+            var stockCodeDict = {
+                Add: function (stockItem, coefficient, groupCoefficient) {
+                    if (undefined === stockCodeDict[stockItem.StockCode]) {
+                        ///初始化
+                        stockCodeDict[stockItem.StockCode] = { StockCode: stockItem.StockCode, StockName: stockItem.StockName, RecommendValue: 0 };
+                    }
+                    stockCodeDict[stockItem.StockCode].RecommendValue += coefficient;
+                }
+            };
+
+            var recommendValue = {};
+
+            for (var key in earningsShare) {
+                var coefficient = this.EarningsShare.Coefficient[key];///系数
+                var stockCodeArray = earningsShare[key];///要分析的股票
+                for (var i = 0; i < stockCodeArray.length; i++) {
+                    var item = stockCodeArray[i];
+                    stockCodeDict.Add(item, coefficient, 1);
+                }
+            }
+
+            for (var key in netProfitGrowthRate) {
+                var coefficient = this.NetProfitGrowthRate.Coefficient[key];///系数
+                var stockCodeArray = netProfitGrowthRate[key];///要分析的股票
+                for (var i = 0; i < stockCodeArray.length; i++) {
+                    var item = stockCodeArray[i];
+                    stockCodeDict.Add(item, coefficient, 1);
+                }
+            }
+
+            for (var key in cashFlowShare) {
+                var coefficient = this.CashFlowShare.Coefficient[key];///系数
+                var stockCodeArray = cashFlowShare[key];///要分析的股票
+                for (var i = 0; i < stockCodeArray.length; i++) {
+                    var item = stockCodeArray[i];
+                    stockCodeDict.Add(item, coefficient, 1);
+                }
+            }
+
+            for (var key in lhb) {
+                var coefficient = this.LHB.Coefficient[key];///系数
+                var stockCodeArray = lhb[key];///要分析的股票
+                for (var i = 0; i < stockCodeArray.length; i++) {
+                    var item = stockCodeArray[i];
+                    stockCodeDict.Add(item, coefficient, 1);
+                }
+            }
+
+            for (var key in blockTrade) {
+                var coefficient = this.BlockTrade.Coefficient[key];///系数
+                var stockCodeArray = blockTrade[key];///要分析的股票
+                for (var i = 0; i < stockCodeArray.length; i++) {
+                    var item = stockCodeArray[i];
+                    stockCodeDict.Add(item, coefficient, 1);
+                }
+            }
+
+            for (var key in marginTrading) {
+                var coefficient = this.MarginTrading.Coefficient[key];///系数
+                var stockCodeArray = marginTrading[key];///要分析的股票
+                for (var i = 0; i < stockCodeArray.length; i++) {
+                    var item = stockCodeArray[i];
+                    stockCodeDict.Add(item, coefficient, 1);
+                }
+            }
+
+            
+
+            var c = 0;
+            for (var stockCode in stockCodeDict) {
+                var item = stockCodeDict[stockCode];
+                var recommendValue = item.RecommendValue;
+                if (undefined === this.RecommendationDict[recommendValue]) {
+                    ///初始化
+                    this.RecommendationDict[recommendValue] = [];
+                    console.log("初始化")
+                }
+                this.RecommendationDict[recommendValue].push(item);
+                console.log((++c)+"  "+item);
+            }
+
             var db = THS.GetDB();
             var collectionName = THS.Const.Collection.AnalysisResult;
-            db.Save(collectionName, THS.AnalyseDataDict, function () { console.log("分析数据保存完毕")}, 0);
+            db.Save(collectionName, this.RecommendationDict, function () {
+                console.log("推荐分析数据保存完毕");
+            }, 0);
+        },
+         
+        SaveData: function () {
+
+            this.CreateRecommendedValue();
+ 
+
+            var db = THS.GetDB();
+            var collectionName = THS.Const.Collection.AnalysisResult;
+            db.Save(collectionName, THS.AnalyseDataDict, function () {
+                console.log("分析数据保存完毕")
+            }, 0);
         }
 
 
@@ -605,12 +924,18 @@ var THS = {
 
         var company = data.Home.Company.Value; ///公司基本信息，数组
         var lhb = data.Home.LHB;///龙虎榜
-        var dzjy = data.Home.DZJY;///大宗交易
-        var rzrq = data.Home.RZRQ;///融资融券
+        var blockTrade = data.Home.DZJY;///大宗交易
+        var marginTrading = data.Home.RZRQ;///融资融券
 
         THS.AnalyseDataDict.AddToArea(stockCode,stockName,company[0]);///地域维度分析
         THS.AnalyseDataDict.AddToConception(stockCode, stockName, company[1]);///概念维度分析
         THS.AnalyseDataDict.AddToMainBusiness(stockCode, stockName, company[3]);///概念维度分析
+        THS.AnalyseDataDict.AddToEarningsShare(stockCode, stockName, company[6]);///每股收益分析
+        THS.AnalyseDataDict.AddToNetProfitGrowthRate(stockCode, stockName, company[8]);///净利润增长率分析
+        THS.AnalyseDataDict.AddToCashFlowShare(stockCode, stockName, company[10]);///每股现金流分析
+        THS.AnalyseDataDict.AddToLHB(stockCode, stockName, lhb);///龙虎榜分析
+        THS.AnalyseDataDict.AddToBlockTrade(stockCode, stockName, blockTrade);///大宗交易分析
+        THS.AnalyseDataDict.AddToMarginTrading(stockCode, stockName, marginTrading);///融资融券分析
 
 
 
