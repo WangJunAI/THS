@@ -17,11 +17,11 @@ var THS = {
     },
     Const: {
         Collection: {
-            Tag:"0903",
+            Tag:"0904",
             Page: "Page" +"0903", ///原始页面,
-            PageData: "PageData" + "0903",///页面一级提取数据
-            Log: "Log" + "0903",///性能日志
-            AnalysisResult: "AnalysisResult" +"0903",
+            PageData: "PageData" + "0904",///页面一级提取数据
+            Log: "Log" + "0904",///性能日志
+            AnalysisResult: "AnalysisResult" +"0904",
         }
     },
     Log: {
@@ -54,8 +54,11 @@ var THS = {
         else if (undefined != item.Funds) {
             THS.Dict[item.StockCode].Funds = item.Funds;
         }
+        else if (undefined != item.Event) {
+            THS.Dict[item.StockCode].Event = item.Event;
+        }
 
-        if (undefined != THS.Dict[item.StockCode].Home && undefined != THS.Dict[item.StockCode].Funds) {
+        if (undefined != THS.Dict[item.StockCode].Home && undefined != THS.Dict[item.StockCode].Funds && undefined != THS.Dict[item.StockCode].Event) {
             var collectionName = THS.Const.Collection.PageData;///原始页面所在集合
             var data = THS.Dict[item.StockCode];
             delete THS.Dict[item.StockCode];
@@ -103,7 +106,8 @@ var THS = {
                 THS.AnalysePagePosition(data);
             }
             else if ("公司大事" === data.ContentType) {
-                THS.AnalysePageEvent(data);
+                var event = THS.AnalysePageEvent(data);
+                res.Event = home;
             }
             else if ("分红融资" === data.ContentType) {
                 THS.AnalysePageBonus(data);
@@ -474,11 +478,7 @@ var THS = {
 
             return funds;
         }
-
-
-
-
-
+         
         // console.log($(company_details).html()); ///这个会有编码问题
     },
 
@@ -514,7 +514,98 @@ var THS = {
 
     ///分析公司大事数据
     AnalysePageEvent: function (pageData) {
+        var $page = $(pageData.Page);
+        var event = {};
 
+        ///近期重要事件
+        var importantEventTrArray = $page.find("#tableList tbody  tr"); ///近期重要事件  
+        var importantEvent = [];
+        for (var i = 0; i < importantEventTrArray.length; i++) {
+            var tr = importantEventTrArray[i];
+            var tdArr = $(tr).children();
+            if (2 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///日期
+                var c2 = $(tdArr[1]).find("strong").text();///类型
+                var c3 = $(tdArr[1]).find("a").text();///标题
+                var c4 = $(tdArr[1]).find("a").attr("href");///链接
+
+
+                var item = {
+                    C1: TOOLS.Convertor.ToDate(c1.replace('-','/')),
+                    C2: c2,
+                    C3: c3,
+                    C4: c4,
+                };
+                importantEvent.push(item);
+            }
+        }
+
+        ///高管持股变动 
+        var shareholdingTrArray = $page.find("#manager table tbody  tr"); ///高管持股变动  
+        var shareholding = [];
+        for (var i = 0; i < shareholdingTrArray.length; i++) {
+            var tr = shareholdingTrArray[i];
+            var tdArr = $(tr).children();
+            if (2 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///变动日期
+                var c2 = $(tdArr[1]).text();///变动人
+                var c3 = $(tdArr[2]).text();///与公司高管关系
+                var c4 = $(tdArr[3]).text();///变动数量（股）
+                var c5 = $(tdArr[4]).text();///交易均价（元）
+                var c6 = $(tdArr[5]).text();///剩余股数（股）
+                var c7 = $(tdArr[6]).text();///股份变动途径
+
+
+                var item = {
+                    C1: TOOLS.Convertor.ToDate(c1.replace('-', '/')),
+                    C2: c2,
+                    C3: c3,
+                    C4: Number(c4.replace(" ", "").replace("增持", "").replace("减持", "-")),
+                    C5: Number(c5),
+                    C6: Number(c6),
+                    C7: c7,
+                };
+                shareholding.push(item);
+            }
+        }
+
+        ///股东持股变动
+        var shareholderTrArray = $page.find("#holder_table  tbody  tr"); ///高管持股变动  
+        var shareholder = [];
+        for (var i = 0; i < shareholderTrArray.length; i++) {
+            var tr = shareholderTrArray[i];
+            var tdArr = $(tr).children();
+            if (2 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///公告日期
+                var c2 = $(tdArr[1]).text();///变动股东
+                var c3 = $(tdArr[2]).text();///变动数量(股)
+                var c4 = $(tdArr[3]).text();///交易均价(元)
+                var c5 = $(tdArr[4]).text();///剩余股份总数(股)
+                var c6 = $(tdArr[5]).text();///变动期间
+                var c7 = $(tdArr[6]).text();///变动途径
+
+                c6 = c6.split(/-/);
+                c6[0] = new Date(c6[0].replace('.', '/'));
+                c6[1] = new Date(c6[1].replace('.', '/'));
+
+
+                var item = {
+                    C1: TOOLS.Convertor.ToDate(c1.replace('-', '/')),
+                    C2: c2,
+                    C3: c3,
+                    C4: Number(c4.replace("万", "").replace("增持", "").replace("减持", "-")),
+                    C5: Number(c5.replace("万", "")),
+                    C6: c6,
+                    C7: c7,
+                };
+                shareholder.push(item);
+            }
+        }
+
+        event["Event"] = event;
+        event["Senior"] = shareholding;
+        event["Shareholder"] = shareholder;
+        return event;
     },
 
     ///分析分红融资数据
@@ -815,6 +906,7 @@ var THS = {
             var blockTrade = this.BlockTrade.Result;
             var marginTrading = this.MarginTrading.Result;
 
+            ///股票推荐字典
             var stockCodeDict = {
                 Add: function (stockItem, coefficient, groupCoefficient) {
                     if (undefined === stockCodeDict[stockItem.StockCode]) {
@@ -902,7 +994,8 @@ var THS = {
                 console.log("推荐分析数据保存完毕");
             }, 0);
         },
-         
+
+        ///保存数据到数据库中
         SaveData: function () {
 
             this.CreateRecommendedValue();
