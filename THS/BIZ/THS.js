@@ -27,18 +27,18 @@ var THS = {
     Log: {
         data: {},
         ///开始计时
-        Start: function (name) {
-            THS.Log.data[name] = { StartTime: new Date() };
+        Start: function (logItemName) {
+            THS.Log.data[logItemName] = { StartTime: new Date() };
         },
         ///
-        Stop: function (name) {
-            THS.Log.data[name].StopTime = new Date();
-            THS.Log.data[name].Name = name;
-            THS.Log.data[name].Name = THS.Log.data[name].StopTime - THS.Log.data[name].StartTime;
+        Stop: function (logItemName) {
+            THS.Log.data[logItemName].StopTime = new Date();
+            THS.Log.data[logItemName].ItemName = logItemName;
+            THS.Log.data[logItemName].Duration = THS.Log.data[logItemName].StopTime - THS.Log.data[logItemName].StartTime;
             var collectionName = THS.Const.Collection.Log;
             var db = THS.GetDB();
-            db.Save(collectionName, THS.Log.data[name], function () {
-                delete THS.Log.data[name];
+            db.Save(collectionName, THS.Log.data[logItemName], function () {
+                delete THS.Log.data[logItemName];
             }, 0);
         }
     },
@@ -73,7 +73,7 @@ var THS = {
         ///日志计时
         THS.Log.Start("页面遍历TraversePage");
 
-        db.Traverse(collectionName, {  }, function (data) {
+        db.Traverse(collectionName, { }, function (data) {//"StockCode": "002417" 
             var res = {};
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
@@ -107,7 +107,7 @@ var THS = {
             }
             else if ("公司大事" === data.ContentType) {
                 var event = THS.AnalysePageEvent(data);
-                res.Event = home;
+                res.Event = event;
             }
             else if ("分红融资" === data.ContentType) {
                 THS.AnalysePageBonus(data);
@@ -526,13 +526,13 @@ var THS = {
             if (2 === $(tr).children().length) {
                 var c1 = $(tdArr[0]).text();///日期
                 var c2 = $(tdArr[1]).find("strong").text();///类型
-                var c3 = $(tdArr[1]).find("a").text();///标题
+                var c3 = $(tdArr[1]).find("a").text().replace("详情>>", "").replace("更多>>", "");///标题
                 var c4 = $(tdArr[1]).find("a").attr("href");///链接
 
 
                 var item = {
                     C1: TOOLS.Convertor.ToDate(c1.replace('-','/')),
-                    C2: c2,
+                    C2: c2.replace("：",""),
                     C3: c3,
                     C4: c4,
                 };
@@ -546,7 +546,7 @@ var THS = {
         for (var i = 0; i < shareholdingTrArray.length; i++) {
             var tr = shareholdingTrArray[i];
             var tdArr = $(tr).children();
-            if (2 === $(tr).children().length) {
+            if (7 === $(tr).children().length) {
                 var c1 = $(tdArr[0]).text();///变动日期
                 var c2 = $(tdArr[1]).text();///变动人
                 var c3 = $(tdArr[2]).text();///与公司高管关系
@@ -560,9 +560,9 @@ var THS = {
                     C1: TOOLS.Convertor.ToDate(c1.replace('-', '/')),
                     C2: c2,
                     C3: c3,
-                    C4: Number(c4.replace(" ", "").replace("增持", "").replace("减持", "-")),
+                    C4: Number(c4.replace(/ /g, "").replace("增持", "").replace("减持", "-").replace("万", "")),
                     C5: Number(c5),
-                    C6: Number(c6),
+                    C6: Number(c6.replace("万","")),
                     C7: c7,
                 };
                 shareholding.push(item);
@@ -575,7 +575,7 @@ var THS = {
         for (var i = 0; i < shareholderTrArray.length; i++) {
             var tr = shareholderTrArray[i];
             var tdArr = $(tr).children();
-            if (2 === $(tr).children().length) {
+            if (7 === $(tr).children().length) {
                 var c1 = $(tdArr[0]).text();///公告日期
                 var c2 = $(tdArr[1]).text();///变动股东
                 var c3 = $(tdArr[2]).text();///变动数量(股)
@@ -592,8 +592,8 @@ var THS = {
                 var item = {
                     C1: TOOLS.Convertor.ToDate(c1.replace('-', '/')),
                     C2: c2,
-                    C3: c3,
-                    C4: Number(c4.replace("万", "").replace("增持", "").replace("减持", "-")),
+                    C3: Number(c3.replace("万", "").replace("增持", "").replace("减持", "-").replace("万", "")),
+                    C4: Number(c4),
                     C5: Number(c5.replace("万", "")),
                     C6: c6,
                     C7: c7,
@@ -602,7 +602,7 @@ var THS = {
             }
         }
 
-        event["Event"] = event;
+        event["Important"] = importantEvent;
         event["Senior"] = shareholding;
         event["Shareholder"] = shareholder;
         return event;
