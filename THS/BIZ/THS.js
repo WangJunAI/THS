@@ -17,11 +17,11 @@ var THS = {
     },
     Const: {
         Collection: {
-            Tag:"0904",
-            Page: "Page" +"0903", ///原始页面,
-            PageData: "PageData" + "0904",///页面一级提取数据
-            Log: "Log" + "0904",///性能日志
-            AnalysisResult: "AnalysisResult" +"0904",
+            Tag:"0912",
+            Page: "Page" +"0914", ///原始页面,
+            PageData: "PageData" + "0912",///页面一级提取数据
+            Log: "Log" + "0912",///性能日志
+            AnalysisResult: "AnalysisResult" +"0912",
         }
     },
     Log: {
@@ -73,25 +73,25 @@ var THS = {
         ///日志计时
         THS.Log.Start("页面遍历TraversePage");
 
-        db.Traverse(collectionName, { }, function (data) {//"StockCode": "002417" 
+        db.Traverse(collectionName, { "StockCode":"002417"}, function (data) {//"StockCode": "002417" 
             var res = {};
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
             res.ContentType = data.ContentType;
             console.log("Traverse 正在分析页面 " + (++count) + "  " + res.StockCode + res.StockName + " " + data.ContentType);
             if ("首页概览" === data.ContentType) {
-                var home = THS.AnalysePageHome(data);
+                var home = THS.AnalysePageHome(data);///OK
                 res.Home = home;
             }
             else if ("资金流向" === data.ContentType) {
-                var funds = THS.AnalysePageFunds(data);
+                var funds = THS.AnalysePageFunds(data);///OK
                 res.Funds = funds;
             }
             else if ("公司资料" === data.ContentType) {
-                THS.AnalysePageCompany(data);
+                THS.AnalysePageCompany(data);///OK
             }
             else if ("新闻公告" === data.ContentType) {
-                THS.AnalysePageNews(data);
+                THS.AnalysePageNews(data);//OK
             }
             else if ("财务分析" === data.ContentType) {
                 THS.AnalysePageFinance(data);
@@ -100,10 +100,12 @@ var THS = {
                 THS.AnalysePageOperate(data);
             }
             else if ("股东股本" === data.ContentType) {
-                THS.AnalysePageHolder(data);
+                var holder = THS.AnalysePageHolder(data);
+
             }
             else if ("主力持仓" === data.ContentType) {
-                THS.AnalysePagePosition(data);
+                var position = THS.AnalysePagePosition(data);
+                res.Position = position;
             }
             else if ("公司大事" === data.ContentType) {
                 var event = THS.AnalysePageEvent(data);
@@ -484,32 +486,543 @@ var THS = {
 
     ///分析公司资料数据
     AnalysePageCompany: function (pageData) {
+        var $page = $(pageData.Page);
+        var Info = {};
+
+        ///详细情况
+        var baseTrArray = $page.find("#detail .m_table tbody tr"); ///详细情况
+        var base = [];
+        ///详细情况
+        for (var i = 0; i < baseTrArray.length; i++) {
+            var tdArray = $(baseTrArray[i]).children(); ///该行TD数组
+            for (var j = 0; j < tdArray.length; j++) {
+                var key = $(tdArray[j]).find("strong").text().replace("：", "");
+                var value = null;
+                if ("公司简介" === key) {
+                     value = $(tdArray[j]).find("p").text();
+                }
+                else {
+                     value = $(tdArray[j]).find("span").text();
+                }
+                
+                base[key]= value;
+            }
+        }
+
+ 
+
+        ///高管介绍
+        ///预处理 移除$(".person_table").remove()
+        $page.find("#manager .person_table").remove();
+
+        var managerTabs = $page.find("#manager .m_tab li a");
+
+        var manager = [];
+        for (var i = 0; i < managerTabs.length; i++) {
+            var tab = managerTabs[i];
+            var tableName = $(tab).attr("targ");
+            var tableTitle = $(tab).text();
+            var group = { Tab: tableTitle,Mgr:[] };
+            var trArray = $page.find("#manager  #" + tableName + " .managelist tbody").eq(0).children();// $("#manager #ml_001 .managelist tbody:eq(0)").children()
+            for (var j = 0; j < trArray.length; j++) {
+                var tdArray = $(trArray[j]).find("td");
+                var c1 = { Name: $(tdArray[0]).text(), Job: $(tdArray[1]).text(), Holding: $(tdArray[2]).text()};
+                var c2 = { Name: $(tdArray[3]).text(), Job: $(tdArray[4]).text(), Holding: $(tdArray[5]).text() };
+                group.Mgr.push(c1);
+                group.Mgr.push(c2);
+            }
+            manager.push(group);
+        }
+
+
+        ///发行相关
+        var publishTdArray = $page.find("#publish .m_table tbody td"); ///发行相关
+        var publish = {};
+        for (var i = 0; i < publishTdArray.length; i++) {
+            var td = publishTdArray[i];
+            var key = $(td).find("strong").text().replace("：","");
+            var value ="";
+            if ("历史沿革" === key) {
+                value = $(td).find("p").text();
+            }
+            else {
+                value = $(td).find("span").text();
+            }
+            publish[key] = value;
+        }
+
+
+
+        ///参股控股公司
+        var shareTrArray = $page.find("#ckg_table  tbody tr"); ///参股控股公司
+        var share = [];
+        for (var i = 0; i < shareTrArray.length; i++) {
+            var tdArray = $(shareTrArray[i]).children();//
+            var c1 = $(tdArray[0]).text();///序号
+            var c2 = $(tdArray[1]).text();///关联公司名称
+            var c3 = $(tdArray[2]).text();///参控关系
+            var c4 = $(tdArray[3]).text();///参控比例
+            var c5 = $(tdArray[4]).text();///投资金额(元)	
+            var c6 = $(tdArray[5]).text();///被参控公司净利润(元)
+            var c7 = $(tdArray[6]).text();///是否报表合并
+            var c8 = $(tdArray[7]).text();///被参股公司主营业务
+
+            var item = {
+                C1: c1,
+                C2: c2,
+                C3: c3,
+                C4: c4,
+                C5: c5,
+                C6: c6,
+                C7: c7,
+                C8: c8,
+            };
+            share.push(item);
+        }
 
     },
 
-    ///分析新闻公告数据
+    ///分析新闻公告数据 http://stockpage.10jqka.com.cn/ajax/code/002417/type/news/
     AnalysePageNews: function (pageData) {
+        var $page = $(pageData.Page.replace("success<!-- 热点新闻模板 -->",""));
+
+        var news = {};
+        ///热点新闻
+        var hotNews = $page.find("#news dl");
+
+        ///公司公告
+        var newslist = $page.find("#pubs li");
+        var companyNews = [];
+        for (var i = 0; i < newslist.length; i++) {
+            var li = newslist[i];
+            var href = $(li).find("a").attr("href");
+            var title = $(li).find("a").attr("title");
+            var date = $(li).find("a span").text();
+            var item = {
+                Title: title,
+                Href:href,
+                Date:date
+            };
+            companyNews.push(item);
+        }
 
     },
 
     ///分析财务分析数据
     AnalysePageFinance: function (pageData) {
+        var $page = $(pageData.Page);
+        var finance = {};
+
+        var indicatorTabs = $page.find("#data-info .top_thead th");///季度数
 
     },
 
     ///分析经营分析数据
     AnalysePageOperate: function (pageData) {
+        var $page = $(pageData.Page);
+
+        ///主营介绍
+        var items1 = $page.find("#intro .main_intro_list li");
+        var mainIntro = [];
+        for (var i = 0; i < items1.length; i++) {
+            var $li = $(items1[i]);
+            var key = $li.find("span").text();
+            var value = $li.find("p").text();
+            var item = { Key: key, Value: value };
+            mainIntro.push(item);
+        }
+
+        ///运营业务数据
+        var operating1 = $page.find("#operate_table tr");///累计值
+        var operating2 = $page.find("#operate_table1 tr");///期末值
+        var opData1 = [];///累计值 Cumulative value
+        var opData2 = [];///Final value 期末值
+
+        for (var i = 0; i < operating1.length; i++) {
+            var tdArray = $(operating1[i]).children();
+            var c1 = $(tdArray[0]).text();///业务名称
+            var c2 = $(tdArray[1]).text();///时间
+            var item = { C1: c1, C2: c2 };
+            opData1.push(item);
+        }
+
+        for (var i = 0; i < operating2.length; i++) {
+            var tdArray = $(operating2[i]).children();
+            var c1 = $(tdArray[0]).text();///业务名称
+            var c2 = $(tdArray[1]).text();///时间
+            var item = { C1: c1, C2: c2 };
+            opData2.push(item);
+        }
+
+        ///主营构成分析 $("#analysis .m_tab.mt15 li") $("#analysis .m_tab_content table tbody")
+        var compositionTabs = $page.find("#analysis .m_tab.mt15 li");
+        var composition = [];
+        for (var i = 0; i < compositionTabs.length; i++) {
+            var tab = $(compositionTabs[0]).text();
+            var comTrArray = $("#analysis .m_tab_content table:eq(" + i + ") tbody tr");
+            for (var i = 0; i < comTrArray.length; i++) {
+                var tdArray = $(comTrArray[i]).children();
+                var item = {};
+                for (var j = 0; j < tdArray.length; j++) {
+                    item["C" + j] = $(tdArray[j]).text();
+                }
+                composition.push(item);
+            }
+        }
+
+
+        ///董事会经营评述
+        var observeTabs = $page.find("#observe .m_tab li");
+        var observeContents = $page.find("#observe .m_tab_content.m_tab_content2 ");
+        var observe = {};
+        for (var i = 0; i < observeContents.length; i++) {
+            var content = $(observeContents[i]).text();
+            var tab = $(observeTabs[i]).text();
+            observe[tab] = content;
+        }
+
+
+
 
     },
 
     ///分析股东股本数据
     AnalysePageHolder: function (pageData) {
+        var $page = $(pageData.Page);
+        var holder = {};
+
+        ///股东人数
+        var gdrsThArray = $page.find("#gdrsTable .data_tbody .top_thead tbody th");///季度数
+        var gdrsTrArray = $page.find("#gdrsTable .data_tbody .tbody tbody tr"); ///股东人数  
+        var gdrs = [];
+
+        for (var i = 0; i < gdrsThArray.length; i++) { ///初始化
+            var item = {
+                Total: -1,///股东总人数(户)
+                PreChange: -1,///较上期变化
+                Circulating: -1,///人均流通股(股)
+                Restricted: -1,///人均流通变化
+                Industry: -1,///行业平均(户)
+            }
+            gdrs.push(item);
+        }
+
+
+        for (var i = 0; i < gdrsTrArray.length; i++) {
+            var tr = gdrsTrArray[i];
+            var tdArr = $(tr).children();
+            if (7 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///指标\日期
+                var c2 = $(tdArr[1]).text();///季度
+                var c3 = $(tdArr[2]).text();///季度
+                var c4 = $(tdArr[3]).text();///季度
+                var c5 = $(tdArr[4]).text();///季度
+                var c6 = $(tdArr[5]).text();///季度 
+                if (i === 0 || "股东总人数(户)" === c1) {
+                    gdrs[0].Total = gdrs[1].Total = gdrs[2].Total = gdrs[3].Total = gdrs[4].Total = c2;
+                }
+                else if ("较上期变化" === c1) {
+                    gdrs[0].PreChange = gdrs[1].PreChange = gdrs[2].PreChange = gdrs[3].PreChange = gdrs[4].PreChange = c3;
+                }
+                else if ("人均流通股(股)" === c1) {
+                    gdrs[0].Circulating = gdrs[1].Circulating = gdrs[2].Circulating = gdrs[3].Circulating = gdrs[4].Circulating = c4;
+                }
+                else if ("人均流通变化" === c1) {
+                    gdrs[0].Restricted = gdrs[1].Restricted = gdrs[2].Restricted = gdrs[3].Restricted = gdrs[4].Restricted = c5;
+                }
+                else if ("行业平均(户)" === c1) {
+                    gdrs[0].Industry = gdrs[1].Industry = gdrs[2].Industry = gdrs[3].Industry = gdrs[4].Industry = c6;
+                }
+            }
+        }
+
+
+        ///十大流通股东
+        var circulationDict = {};
+        for (var t = 1; t < 6; t++) {
+            var key = $($page.find("#bd_1 li").eq(t - 1)).text();
+
+            var circulationTrArray = $page.find("##bd_list1 #fher_"+t+" table tbody  tr"); ///高管持股变动  
+            var circulation = [];
+            for (var i = 0; i < circulationTrArray.length; i++) {
+                var tr = circulation[i];
+                var tdArr = $(tr).children();
+                if (7 === $(tr).children().length) {
+                    var c1 = $(tdArr[0]).text();///机构或基金名称
+                    var c2 = $(tdArr[1]).text();///持有数量(股)
+                    var c3 = $(tdArr[2]).text();///持股变化(股)
+                    var c4 = $(tdArr[3]).text();///占流通股比例
+                    var c5 = $(tdArr[4]).text();///实际增减持
+                    var c6 = $(tdArr[5]).text();///股份类型
+                    var c7 = $(tdArr[6]).attr("onclick");///持股详情
+
+
+                    var item = {
+                        C1: c1,
+                        C2: c2,
+                        C3: c3,
+                        C4: c4,
+                        C5: c5,
+                        C6: c6,
+                        C7: c7,
+                    };
+                    circulation.push(item);
+                }
+            }
+
+            circulationDict[key] = circulation;
+        }
+
+
+        ///十大股东
+        var shareholderDict = {};
+        for (var t = 1; t < 6; t++) {
+            var key = $($page.find("#bd_0 li").eq(t - 1)).text();
+
+            var shareholderTrArray = $page.find("#bd_list0 #fher_" + t + " table tbody  tr"); ///高管持股变动  
+            var shareholder = [];
+            for (var i = 0; i < shareholderTrArray.length; i++) {
+                var tr = shareholder[i];
+                var tdArr = $(tr).children();
+                if (7 === $(tr).children().length) {
+                    var c1 = $(tdArr[0]).text();///机构或基金名称
+                    var c2 = $(tdArr[1]).text();///持有数量(股)
+                    var c3 = $(tdArr[2]).text();///持股变化(股)
+                    var c4 = $(tdArr[3]).text();///占流通股比例
+                    var c5 = $(tdArr[4]).text();///实际增减持
+                    var c6 = $(tdArr[5]).text();///股份类型
+                    var c7 = $(tdArr[6]).attr("onclick");///持股详情
+
+
+                    var item = {
+                        C1: c1,
+                        C2: c2,
+                        C3: c3,
+                        C4: c4,
+                        C5: c5,
+                        C6: c6,
+                        C7: c7,
+                    };
+                    shareholder.push(item);
+                }
+            }
+
+            shareholderDictDict[key] = circulation;
+        }
+
+        ///解禁时间表
+        var liftingScheduleTrArray = $page.find("#liftban tbody  tr"); ///近期重要事件  
+        var liftingSchedule = [];
+        for (var i = 0; i < liftingScheduleTrArray.length; i++) {
+            var tr = liftingScheduleTrArray[i];
+            var tdArr = $(tr).children();
+            if (2 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///解禁日期
+                var c2 = $(tdArr[1]).text();///解禁股成本(元)
+                var c3 = $(tdArr[2]).text();///前日收盘价(元)
+                var c4 = $(tdArr[3]).text();///解禁市值(元)
+                var c5 = $(tdArr[4]).text();///解禁股占总股本比例
+                var c6 = $(tdArr[5]).text();///解禁股份类型
+                var c7 = $(tdArr[6]).text();///是否实际值
+                 
+                var item = {
+                    C1: c1,
+                    C2: c2,
+                    C3: c3,
+                    C4: c4,
+                    C5: c5,
+                    C6: c6,
+                    C7: c7
+                };
+                liftingSchedule.push(item);
+            }
+        }
+
+        ///总股本结构
+        var capitTrArray = $page.find("#stockcapit tbody  tr"); ///近期重要事件  
+        var capit = [];
+
+        for (var i = 0; i < 6; i++) {
+            var item = {
+                Total: -1,///总股本(股)
+                ATotal: -1,///A股总股本(股)
+                Circulating : -1,///流通A股(股)
+                Restricted : -1,///限售A股(股)
+                Reason: -1,///变动原因
+            }
+            capit.push(item);
+        }
+
+
+        for (var i = 0; i < capitTrArray.length; i++) {
+            var tr = capitTrArray[i];
+            var tdArr = $(tr).children();
+            if (7 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///指标\日期
+                var c2 = $(tdArr[1]).text();///季度
+                var c3 = $(tdArr[2]).text();///季度
+                var c4 = $(tdArr[3]).text();///季度
+                var c5 = $(tdArr[4]).text();///季度
+                var c6 = $(tdArr[5]).text();///季度 
+                var c7 = $(tdArr[6]).text();///季度 
+
+                if ("总股本(股)" === c1) {
+                    capit[0].Total = capit[1].Total = capit[2].Total = capit[3].Total = capit[4].Total = c2;
+                }
+                else if ("A股总股本(股)" === c1) {
+                    capit[0].ATotal = capit[1].ATotal = capit[2].ATotal = capit[3].ATotal = capit[4].ATotal = c3;
+                }
+                else if ("流通A股(股)" === c1) {
+                    capit[0].Circulating = capit[1].Circulating = capit[2].Circulating = capit[3].Circulating = capit[4].Circulating = c4;
+                }
+                else if ("限售A股(股)" === c1) {
+                    capit[0].Restricted = capit[1].Restricted = capit[2].Restricted = capit[3].Restricted = capit[4].Restricted = c5;
+                }
+                else if ("变动原因" === c1) {
+                    capit[0].Reason = capit[1].Reason = capit[2].Reason = capit[3].Reason = capit[4].Reason = c6;
+                }
+            }
+        }
+
+        ///A股历次股本变动
+        var stockChangeTrArray = $page.find("#astockchange tbody  tr"); ///近期重要事件  
+        var stockChange = [];
+        for (var i = 0; i < stockChangeTrArray.length; i++) {
+            var tr = stockChangeTrArray[i];
+            var tdArr = $(tr).children();
+            if (5 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///变动日期
+                var c2 = $(tdArr[1]).text();///变动原因
+                var c3 = $(tdArr[2]).text();///变动后A股总股本(股)
+                var c4 = $(tdArr[3]).text();///变动后流通A股(股)
+                var c5 = $(tdArr[4]).text();///变动后限售A股(股)
+
+
+                var item = {
+                    C1: c1,
+                    C2: c2,
+                    C3: c3,
+                    C4: c4,
+                    C5: c5,
+                };
+                stockChange.push(item);
+            }
+        }
+
+
 
     },
 
     ///分析主力持仓数据
     AnalysePagePosition: function (pageData) {
+        var $page = $(pageData.Page);
+        var position = {};
 
+        ///机构持股汇总
+        var organholdThArray = $page.find("#organhold thead  th").eq(0).children(); ///近期重要事件  
+        var organholdTrArray = $page.find("#organhold tbody  tr"); ///近期重要事件  
+        var organhold = [];
+
+        for (var i = 0; i < 5; i++) {
+            var item = {
+                Date: $(organholdThArray[1]).text(),///时间
+                Count: -1,///机构数量(家)
+                Share: -1,///累计持有数量(股)
+                MarketValue: -1,///累计市值(元)
+                Ratio: -1,///持仓比例
+                Change: -1,///较上期变化(股)
+            }
+
+            organhold.push(item);
+        }
+         
+
+        for (var i = 0; i < organholdTrArray.length; i++) {
+            var tr = organholdTrArray[i];
+            var tdArr = $(tr).children();
+            if (6 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///主力进出\报告期
+                var c2 = $(tdArr[1]).text();///季度
+                var c3 = $(tdArr[2]).text();///季度
+                var c4 = $(tdArr[3]).text();///季度
+                var c5 = $(tdArr[4]).text();///季度
+                var c6 = $(tdArr[5]).text();///季度 
+                if ("机构数量(家)" === c1) {
+                    organhold[0].Count = organhold[1].Count = organhold[2].Count = organhold[3].Count = organhold[4].Count = c2;
+                }
+                else if ("累计持有数量(股)" === c1)
+                {
+                    organhold[0].Count = organhold[1].Count = organhold[2].Count = organhold[3].Count = organhold[4].Count = c3;
+                }
+                else if ("累计市值(元)" === c1) {
+                    organhold[0].Count = organhold[1].Count = organhold[2].Count = organhold[3].Count = organhold[4].Count = c4;
+                }
+                else if ("持仓比例" === c1) {
+                    organhold[0].Count = organhold[1].Count = organhold[2].Count = organhold[3].Count = organhold[4].Count = c5;
+                }
+                else if ("较上期变化(股)" === c1) {
+                    organhold[0].Count = organhold[1].Count = organhold[2].Count = organhold[3].Count = organhold[4].Count = c6;
+                }
+            }
+        }
+
+        ///机构持股明细
+        var shareholdingDetailTrArray = $page.find("#organInfo_1  tr"); ///近期重要事件  
+        var shareholdingDetail = [];
+        for (var i = 0; i < shareholdingDetailTrArray.length; i++) {
+            var tr = shareholdingDetailTrArray[i];
+            var tdArr = $(tr).children();
+            if (6 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///日期机构或基金名称
+                var c2 = $(tdArr[1]).text();///机构类型
+                var c3 = $(tdArr[2]).text();///持有数量(股)
+                var c4 = $(tdArr[3]).text();///持股市值(元)
+                var c5 = $(tdArr[4]).text();///占流通股比例
+                var c6 = $(tdArr[5]).text();///增减情况(股)
+
+                var item = {
+                    C1: c1,
+                    C2: c2,
+                    C3: c3,
+                    C4: c4,
+                    C5: c5,
+                    C6: c6,
+                };
+                shareholdingDetail.push(item);
+            }
+        }
+
+        ///IPO获配机构
+        var ipoallotTrArray = $page.find("#ipoallot tbody  tr"); ///近期重要事件  
+        var ipoallot = [];
+        for (var i = 0; i < ipoallotTrArray.length; i++) {
+            var tr = ipoallotTrArray[i];
+            var tdArr = $(tr).children();
+            if (6 === $(tr).children().length) {
+                var c1 = $(tdArr[0]).text();///序号
+                var c2 = $(tdArr[1]).text();///机构名称
+                var c3 = $(tdArr[2]).text();///获配数量(股)
+                var c4 = $(tdArr[3]).text();///申购数量(股)
+                var c5 = $(tdArr[4]).text();///锁定期(月)
+                var c6 = $(tdArr[5]).text();///机构类型
+
+                var item = {
+                    C1: c1,
+                    C2: c2,
+                    C3: c3,
+                    C4: c4,
+                    C5: c5,
+                    C6: c6,
+                };
+                ipoallot.push(item);
+            }
+        }
+
+
+        position["Organhold"] = organhold;
+        position["Detail"] = shareholdingDetail;
+        position["IPO"] = ipoallot;
+        return position;
     },
 
     ///分析公司大事数据
@@ -610,6 +1123,21 @@ var THS = {
 
     ///分析分红融资数据
     AnalysePageBonus: function (pageData) {
+        var $page = $(pageData.Page);
+        var trArray = $page.find("#bonus_table tbody tr");
+        var bonus = [];
+        for (var i = 0; i < trArray.length; i++) {
+            var tdArray = $(trArray[i]).children();
+            var item = {};
+            for (var j = 0; j < length; j++) {
+                item["C" + j] = $(tdArray[j]).text();
+            }
+            bonus.push(item);
+        }
+
+        ///增发概况
+        var additionprofileTr = $page.find("#additionprofile_bd");
+        var tableData = {};
 
     },
 

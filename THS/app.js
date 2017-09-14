@@ -14,4 +14,7 @@ var ths = require("./BIZ/THS");
 ths.TraversePage();
 //ths.TraverseData();
 
+var wiki = require("./BIZ/WIKI");
+//wiki.TraverseIndex();
+
 console.log('Hello world');
