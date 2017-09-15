@@ -17,11 +17,11 @@ var THS = {
     },
     Const: {
         Collection: {
-            Tag:"0914",
-            Page: "Page" +"0914", ///原始页面,
-            PageData: "PageData" + "0914",///页面一级提取数据
-            Log: "Log" + "0914",///性能日志
-            AnalysisResult: "AnalysisResult" +"0914",
+            Tag:"0915",
+            Page: "Page" +"0915", ///原始页面,
+            PageData: "PageData" + "0915",///页面一级提取数据
+            Log: "Log" + "0915",///性能日志
+            AnalysisResult: "AnalysisResult" +"0915",
         }
     },
     Log: {
@@ -44,45 +44,52 @@ var THS = {
     },
     Dict: {},
     DB: null,
+    QueueW:[],
     SavePageData: function (item) {
-        if (undefined === THS.Dict[item.StockCode]) {
-            THS.Dict[item.StockCode] = item;
-        }
-        else if (undefined != item.Home) {
-            THS.Dict[item.StockCode].Home = item.Home;
-        }
-        else if (undefined != item.Funds) {
-            THS.Dict[item.StockCode].Funds = item.Funds;
-        }
-        else if (undefined != item.Event) {
-            THS.Dict[item.StockCode].Event = item.Event;
-        }
-        else if (undefined != item.Info) {
-            THS.Dict[item.StockCode].Info = item.Info;
-        }
-        else if (undefined != item.Position) {
-            THS.Dict[item.StockCode].Position = item.Position;
-        }
-        else if (undefined != item.News) {
-            THS.Dict[item.StockCode].News = item.News;
-        }
-        else if (undefined != item.DayLine) {
-            THS.Dict[item.StockCode].DayLine = item.DayLine;
-        }
+        //if (undefined === THS.Dict[item.StockCode]) {
+        //    THS.Dict[item.StockCode] = item;
+        //}
+        //else if (undefined != item.Home) {
+        //    THS.Dict[item.StockCode].Home = item.Home;
+        //}
+        //else if (undefined != item.Funds) {
+        //    THS.Dict[item.StockCode].Funds = item.Funds;
+        //}
+        //else if (undefined != item.Event) {
+        //    THS.Dict[item.StockCode].Event = item.Event;
+        //}
+        //else if (undefined != item.Info) {
+        //    THS.Dict[item.StockCode].Info = item.Info;
+        //}
+        //else if (undefined != item.Position) {
+        //    THS.Dict[item.StockCode].Position = item.Position;
+        //}
+        //else if (undefined != item.News) {
+        //    THS.Dict[item.StockCode].News = item.News;
+        //}
+        //else if (undefined != item.DayLine) {
+        //    THS.Dict[item.StockCode].DayLine = item.DayLine;
+        //}
          
-        if (undefined != THS.Dict[item.StockCode].Home
-            && undefined != THS.Dict[item.StockCode].Funds
-            && undefined != THS.Dict[item.StockCode].Event
-            && undefined != THS.Dict[item.StockCode].Info
-            && undefined != THS.Dict[item.StockCode].Position
-            && undefined != THS.Dict[item.StockCode].News
-            && undefined != THS.Dict[item.StockCode].DayLine
-        ) {
+        //if (undefined != THS.Dict[item.StockCode].Home
+        //    && undefined != THS.Dict[item.StockCode].Funds
+        //    && undefined != THS.Dict[item.StockCode].Event
+        //    && undefined != THS.Dict[item.StockCode].Info
+        //    && undefined != THS.Dict[item.StockCode].Position
+        //    && undefined != THS.Dict[item.StockCode].News
+        //    && undefined != THS.Dict[item.StockCode].DayLine
+        //) {
+        //    var collectionName = THS.Const.Collection.PageData;///原始页面所在集合
+        //    var data = THS.Dict[item.StockCode];
+        //    delete THS.Dict[item.StockCode];
+        //    var db = THS.GetDB();
+        //    db.Save(collectionName, data, function () { }, 0);
+        //}
+
+        {
             var collectionName = THS.Const.Collection.PageData;///原始页面所在集合
-            var data = THS.Dict[item.StockCode];
-            delete THS.Dict[item.StockCode];
-            var db = THS.GetDB();
-            db.Save(collectionName, data, function () { }, 0);
+             var db = THS.GetDB();
+             db.Save(collectionName, item, function () {console.log("保存完毕"+item.StockName) }, 0);
         }
     },
     TraversePage: function () {
@@ -92,7 +99,7 @@ var THS = {
         ///日志计时
         THS.Log.Start("页面遍历TraversePage");
 
-        db.Traverse(collectionName, { }, function (data) {//"StockCode": "002417" 
+        db.Traverse(collectionName, { $or: [/*{ "ContentType": "首页概览" },*//* { "ContentType": "资金流向" },*/ /*{ "ContentType": "公司资料" }, *//*{ "ContentType": "新闻公告" },*//*{ "ContentType": "主力持仓" },*/ /*{ "ContentType": "公司大事" }, */{ "ContentType": "日线数据" }] }, function (data) {//"StockCode": "002417" 
             var res = {};
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
@@ -114,16 +121,16 @@ var THS = {
                 var news = THS.AnalysePageNews(data);//OK
                 res.News = news;
             }
-            else if ("财务分析" === data.ContentType) {
-                //THS.AnalysePageFinance(data);
-            }
-            else if ("经营分析" === data.ContentType) {
-                //THS.AnalysePageOperate(data);
-            }
-            else if ("股东股本" === data.ContentType) {
-                //var holder = THS.AnalysePageHolder(data);
+            //else if ("财务分析" === data.ContentType) {
+            //    //THS.AnalysePageFinance(data);
+            //}
+            //else if ("经营分析" === data.ContentType) {
+            //    //THS.AnalysePageOperate(data);
+            //}
+            //else if ("股东股本" === data.ContentType) {
+            //    //var holder = THS.AnalysePageHolder(data);
 
-            }
+            //}
             else if ("主力持仓" === data.ContentType) {
                 var position = THS.AnalysePagePosition(data);//OK
                 res.Position = position;
@@ -132,24 +139,33 @@ var THS = {
                 var event = THS.AnalysePageEvent(data);//OK
                 res.Event = event;
             }
-            else if ("分红融资" === data.ContentType) {
-                //THS.AnalysePageBonus(data);
-            }
-            else if ("价值分析" === data.ContentType) {
-                //THS.AnalysePageWorth(data);
-            }
-            else if ("行业分析" === data.ContentType) {
-                //THS.AnalysePageField(data);
-            }
+            //else if ("分红融资" === data.ContentType) {
+            //    //THS.AnalysePageBonus(data);
+            //}
+            //else if ("价值分析" === data.ContentType) {
+            //    //THS.AnalysePageWorth(data);
+            //}
+            //else if ("行业分析" === data.ContentType) {
+            //    //THS.AnalysePageField(data);
+            //}
             else if ("日线数据" === data.ContentType) {
-                var dayLine = THS.AnalysePageDayLine(data);///OK
-                res.DayLine = dayLine;
+                //var dayLine = THS.AnalysePageDayLine(data);///OK
+                //res.DayLine = dayLine;
             }
 
-            THS.SavePageData(res);
-
+            //THS.SavePageData(res);
+            THS.QueueW.push(res);
+            console.log("Queue.Length " + THS.QueueW.length);
         }, function (endMsg) {
             console.log("遍历结束");
+
+            while (0 < THS.QueueW.length) {
+                var q = THS.QueueW.pop();
+                console.log("开始保存一个数据" + q.StockName);
+                THS.SavePageData(q);
+            }
+
+
             THS.Log.Stop("页面遍历TraversePage");
         }, function (errMsg) {
             console.log("出错");
