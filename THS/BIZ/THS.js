@@ -17,11 +17,11 @@ var THS = {
     },
     Const: {
         Collection: {
-            Tag:"0912",
+            Tag:"0914",
             Page: "Page" +"0914", ///原始页面,
-            PageData: "PageData" + "0912",///页面一级提取数据
-            Log: "Log" + "0912",///性能日志
-            AnalysisResult: "AnalysisResult" +"0912",
+            PageData: "PageData" + "0914",///页面一级提取数据
+            Log: "Log" + "0914",///性能日志
+            AnalysisResult: "AnalysisResult" +"0914",
         }
     },
     Log: {
@@ -57,8 +57,27 @@ var THS = {
         else if (undefined != item.Event) {
             THS.Dict[item.StockCode].Event = item.Event;
         }
-
-        if (undefined != THS.Dict[item.StockCode].Home && undefined != THS.Dict[item.StockCode].Funds && undefined != THS.Dict[item.StockCode].Event) {
+        else if (undefined != item.Info) {
+            THS.Dict[item.StockCode].Info = item.Info;
+        }
+        else if (undefined != item.Position) {
+            THS.Dict[item.StockCode].Position = item.Position;
+        }
+        else if (undefined != item.News) {
+            THS.Dict[item.StockCode].News = item.News;
+        }
+        else if (undefined != item.DayLine) {
+            THS.Dict[item.StockCode].DayLine = item.DayLine;
+        }
+         
+        if (undefined != THS.Dict[item.StockCode].Home
+            && undefined != THS.Dict[item.StockCode].Funds
+            && undefined != THS.Dict[item.StockCode].Event
+            && undefined != THS.Dict[item.StockCode].Info
+            && undefined != THS.Dict[item.StockCode].Position
+            && undefined != THS.Dict[item.StockCode].News
+            && undefined != THS.Dict[item.StockCode].DayLine
+        ) {
             var collectionName = THS.Const.Collection.PageData;///原始页面所在集合
             var data = THS.Dict[item.StockCode];
             delete THS.Dict[item.StockCode];
@@ -73,7 +92,7 @@ var THS = {
         ///日志计时
         THS.Log.Start("页面遍历TraversePage");
 
-        db.Traverse(collectionName, { "StockCode":"002417"}, function (data) {//"StockCode": "002417" 
+        db.Traverse(collectionName, { }, function (data) {//"StockCode": "002417" 
             var res = {};
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
@@ -88,38 +107,44 @@ var THS = {
                 res.Funds = funds;
             }
             else if ("公司资料" === data.ContentType) {
-                THS.AnalysePageCompany(data);///OK
+                var company = THS.AnalysePageCompany(data);///OK
+                res.Info = company;
             }
             else if ("新闻公告" === data.ContentType) {
-                THS.AnalysePageNews(data);//OK
+                var news = THS.AnalysePageNews(data);//OK
+                res.News = news;
             }
             else if ("财务分析" === data.ContentType) {
-                THS.AnalysePageFinance(data);
+                //THS.AnalysePageFinance(data);
             }
             else if ("经营分析" === data.ContentType) {
-                THS.AnalysePageOperate(data);
+                //THS.AnalysePageOperate(data);
             }
             else if ("股东股本" === data.ContentType) {
-                var holder = THS.AnalysePageHolder(data);
+                //var holder = THS.AnalysePageHolder(data);
 
             }
             else if ("主力持仓" === data.ContentType) {
-                var position = THS.AnalysePagePosition(data);
+                var position = THS.AnalysePagePosition(data);//OK
                 res.Position = position;
             }
             else if ("公司大事" === data.ContentType) {
-                var event = THS.AnalysePageEvent(data);
+                var event = THS.AnalysePageEvent(data);//OK
                 res.Event = event;
             }
             else if ("分红融资" === data.ContentType) {
-                THS.AnalysePageBonus(data);
+                //THS.AnalysePageBonus(data);
             }
             else if ("价值分析" === data.ContentType) {
-                THS.AnalysePageWorth(data);
+                //THS.AnalysePageWorth(data);
             }
             else if ("行业分析" === data.ContentType) {
-                THS.AnalysePageField(data);
-            } 
+                //THS.AnalysePageField(data);
+            }
+            else if ("日线数据" === data.ContentType) {
+                var dayLine = THS.AnalysePageDayLine(data);///OK
+                res.DayLine = dayLine;
+            }
 
             THS.SavePageData(res);
 
@@ -571,15 +596,20 @@ var THS = {
                 C1: c1,
                 C2: c2,
                 C3: c3,
-                C4: c4,
-                C5: c5,
-                C6: c6,
+                C4: TOOLS.STR.ToNumber( c4),
+                C5: TOOLS.STR.ToNumber( c5),
+                C6:  TOOLS.STR.ToNumber( c6),
                 C7: c7,
                 C8: c8,
             };
             share.push(item);
         }
 
+        Info["Intro"] = base;
+        Info["Manager"] = manager;
+        Info["Publish"] = publish;
+        Info["Share"] = share;
+        return Info;
     },
 
     ///分析新闻公告数据 http://stockpage.10jqka.com.cn/ajax/code/002417/type/news/
@@ -606,6 +636,8 @@ var THS = {
             companyNews.push(item);
         }
 
+        news["Publish"] = companyNews;
+        return news;
     },
 
     ///分析财务分析数据
@@ -919,13 +951,13 @@ var THS = {
         var position = {};
 
         ///机构持股汇总
-        var organholdThArray = $page.find("#organhold thead  th").eq(0).children(); ///近期重要事件  
+        var organholdThArray = $page.find("#organhold thead  th"); ///近期重要事件  
         var organholdTrArray = $page.find("#organhold tbody  tr"); ///近期重要事件  
         var organhold = [];
 
-        for (var i = 0; i < 5; i++) {
+        for (var i = 1; i < organholdThArray.length; i++) {
             var item = {
-                Date: $(organholdThArray[1]).text(),///时间
+                Date: TOOLS.Convertor.ToDate($(organholdThArray[1]).text()),///时间
                 Count: -1,///机构数量(家)
                 Share: -1,///累计持有数量(股)
                 MarketValue: -1,///累计市值(元)
@@ -948,50 +980,75 @@ var THS = {
                 var c5 = $(tdArr[4]).text();///季度
                 var c6 = $(tdArr[5]).text();///季度 
                 if ("机构数量(家)" === c1) {
-                    organhold[0].Count = organhold[1].Count = organhold[2].Count = organhold[3].Count = organhold[4].Count = c2;
+                    organhold[0].Count = parseInt(c2);
+                    organhold[1].Count = parseInt(c3);
+                    organhold[2].Count = parseInt(c4);
+                    organhold[3].Count = parseInt(c5);
+                    organhold[4].Count = parseInt(c6);
                 }
-                else if ("累计持有数量(股)" === c1)
-                {
-                    organhold[0].Count = organhold[1].Count = organhold[2].Count = organhold[3].Count = organhold[4].Count = c3;
+                else if ("累计持有数量(股)" === c1) {
+                    organhold[0].Share = TOOLS.STR.ToNumber(c2);
+                    organhold[1].Share = TOOLS.STR.ToNumber(c3);
+                    organhold[2].Share = TOOLS.STR.ToNumber(c4);
+                    organhold[3].Share = TOOLS.STR.ToNumber(c5);
+                    organhold[4].Share = TOOLS.STR.ToNumber(c6);
                 }
                 else if ("累计市值(元)" === c1) {
-                    organhold[0].Count = organhold[1].Count = organhold[2].Count = organhold[3].Count = organhold[4].Count = c4;
+                    organhold[0].MarketValue = TOOLS.STR.ToNumber( c2);
+                    organhold[1].MarketValue = TOOLS.STR.ToNumber( c3);
+                    organhold[2].MarketValue = TOOLS.STR.ToNumber(c4);
+                    organhold[3].MarketValue = TOOLS.STR.ToNumber(c5);
+                    organhold[4].MarketValue = TOOLS.STR.ToNumber(c6);
                 }
                 else if ("持仓比例" === c1) {
-                    organhold[0].Count = organhold[1].Count = organhold[2].Count = organhold[3].Count = organhold[4].Count = c5;
+                    organhold[0].Ratio = TOOLS.STR.ToNumber(c2);
+                    organhold[1].Ratio = TOOLS.STR.ToNumber( c3);
+                    organhold[2].Ratio = TOOLS.STR.ToNumber( c4);
+                    organhold[3].Ratio = TOOLS.STR.ToNumber( c5);
+                    organhold[4].Ratio = TOOLS.STR.ToNumber( c6);
                 }
                 else if ("较上期变化(股)" === c1) {
-                    organhold[0].Count = organhold[1].Count = organhold[2].Count = organhold[3].Count = organhold[4].Count = c6;
+                    organhold[0].Change = c2;
+                    organhold[1].Change = c3;
+                    organhold[2].Change = c4;
+                    organhold[3].Change = c5;
+                    organhold[4].Change = c6;
                 }
             }
         }
 
         ///机构持股明细
-        var shareholdingDetailTrArray = $page.find("#organInfo_1  tr"); ///近期重要事件  
+        var shareholdingDetailTabArray = $page.find("#holdetail ul li a[targ]");
         var shareholdingDetail = [];
-        for (var i = 0; i < shareholdingDetailTrArray.length; i++) {
-            var tr = shareholdingDetailTrArray[i];
-            var tdArr = $(tr).children();
-            if (6 === $(tr).children().length) {
-                var c1 = $(tdArr[0]).text();///日期机构或基金名称
-                var c2 = $(tdArr[1]).text();///机构类型
-                var c3 = $(tdArr[2]).text();///持有数量(股)
-                var c4 = $(tdArr[3]).text();///持股市值(元)
-                var c5 = $(tdArr[4]).text();///占流通股比例
-                var c6 = $(tdArr[5]).text();///增减情况(股)
 
-                var item = {
-                    C1: c1,
-                    C2: c2,
-                    C3: c3,
-                    C4: c4,
-                    C5: c5,
-                    C6: c6,
-                };
-                shareholdingDetail.push(item);
+        for (var i = 0; i < shareholdingDetailTabArray.length; i++) {
+            var tab = shareholdingDetailTabArray[i];
+            var targ = $(tab).attr("targ");
+            var tabTitle = $(tab).text();
+            var trArray = $page.find("#holdetail #" + targ + " tbody tr");
+            for (var j = 0; j < trArray.length; j++) {
+                var tdArray = $(trArray[j]).children();
+                if (6 === tdArray.length) {
+                    var c1 = $(tdArray[0]).text();///日期机构或基金名称
+                    var c2 = $(tdArray[1]).text();///机构类型
+                    var c3 = $(tdArray[2]).text();///持有数量(股)
+                    var c4 = $(tdArray[3]).text();///持股市值(元)
+                    var c5 = $(tdArray[4]).text();///占流通股比例
+                    var c6 = $(tdArray[5]).text();///增减情况(股)
+
+                    var item = {
+                        C1: c1,
+                        C2: c2,
+                        C3: TOOLS.STR.ToNumber(c3),
+                        C4:  TOOLS.STR.ToNumber(c4),
+                        C5: TOOLS.STR.ToNumber(c5),
+                        C6: c6,
+                    };
+                    shareholdingDetail.push(item);
+                }
             }
         }
-
+ 
         ///IPO获配机构
         var ipoallotTrArray = $page.find("#ipoallot tbody  tr"); ///近期重要事件  
         var ipoallot = [];
@@ -1009,9 +1066,9 @@ var THS = {
                 var item = {
                     C1: c1,
                     C2: c2,
-                    C3: c3,
-                    C4: c4,
-                    C5: c5,
+                    C3: TOOLS.STR.ToNumber(c3),
+                    C4: TOOLS.STR.ToNumber(c4),
+                    C5: TOOLS.STR.ToNumber(c5),
                     C6: c6,
                 };
                 ipoallot.push(item);
@@ -1150,6 +1207,33 @@ var THS = {
     AnalysePageField: function (pageData) {
 
     },
+
+    ///日线数据分析
+    AnalysePageDayLine: function (pageData) {
+        var jsonString = pageData.Page;
+        var str = jsonString.substring("quotebridge_v2_line_hs_000000_01_last(".length);
+        str = str.substring(0, str.lastIndexOf(')'));
+        var item = JSON.parse(str);
+        var dayArray = item.data.split(/;/g);
+        var lineArray = [];
+        for (var i = 0; i < dayArray.length; i++) {
+            var arr = dayArray[i].split(/,/g);
+            var dayLine = {};
+            dayLine["Date"] = parseInt(arr[0]);///日期，原始格式 20170913
+            dayLine["Opening"] = Number(arr[1]);///开盘价
+            dayLine["Max"] = Number(arr[2]);//最高价
+            dayLine["Lowest"] = Number(arr[3]);//最低价
+            dayLine["Closing"] = Number(arr[4]);//收盘价
+            dayLine["Volume"] = Number(arr[5]);//成交量
+            dayLine["Turnover"] = Number( arr[6]);//成交额
+            dayLine["Rate"] = Number(arr[7]);//换手率
+
+            lineArray.push(dayLine);
+        }
+        item.data = lineArray;
+        return item;
+    },
+
     AnalyseDataDict: {
         Intro:"",
         Area: {

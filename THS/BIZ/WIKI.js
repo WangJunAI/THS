@@ -15,6 +15,15 @@ var WIKI = {
         }
         return WIKI.DB;
     },
+    GetWriteDB: function () {
+        var opt = MongoDB.GetEmptyOption();
+        opt.url = "mongodb://192.168.0.150:27017/wiki";
+        var db = MongoDB.GetInst("wiki", opt);
+        if (null === WIKI.WDB) {
+            WIKI.WDB = db;
+        }
+        return WIKI.WDB;
+    },
     Const: {
         Collection: {
             Tag: "0912",
@@ -34,7 +43,7 @@ var WIKI = {
             WIKI.Log.data[logItemName].ItemName = logItemName;
             WIKI.Log.data[logItemName].Duration = WIKI.Log.data[logItemName].StopTime - WIKI.Log.data[logItemName].StartTime;
             var collectionName = WIKI.Const.Collection.Log;
-            var db = WIKI.GetDB();
+            var db = WIKI.GetWriteDB();
             db.Save(collectionName, WIKI.Log.data[logItemName], function () {
                 delete WIKI.Log.data[logItemName];
             }, 0);
@@ -42,10 +51,11 @@ var WIKI = {
     },
     Dict: {},
     DB: null, 
+    WDB: null, 
     TraverseIndex: function () {
         var db = WIKI.GetDB();
         var collectionName = WIKI.Const.Collection.Index;
-
+        var wdb = WIKI.GetWriteDB();
         ///日志计时
         WIKI.Log.Start("页面遍历WIKI Index");
 
@@ -56,10 +66,10 @@ var WIKI = {
                 for (var i = 0; i < content.length; i++) {
                     item["C" + i] = content[i];
                 }
-                db.Save("Keyword", item, function () { }, 0);
+                wdb.Save("Keyword", item, function () { }, 0);
             }
             else {
-                db.Save("Exception", data, function () { }, 0);
+                wdb.Save("Exception", data, function () { }, 0);
             }
         }, function (endMsg) {
             console.log("遍历结束");

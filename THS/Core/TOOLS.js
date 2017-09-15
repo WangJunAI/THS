@@ -35,6 +35,25 @@ var TOOLS = {
         ///
         SubStringReplace: function (startIndex,endIndex,replaceObj) {
             
+        },
+        ///将转换为数字
+        ToNumber: function (input) {
+            input = input.replace("元", "");
+            input = input.replace("不足", "");
+            var res = "";
+            if (new RegExp(/亿/).test(input)) {
+                input = input.replace("亿", "");
+                res = Number(input) * 10000 * 10000;
+            }
+            else if (new RegExp(/万/).test(input)) {
+                input = input.replace("万", "");
+                res = Number(input) * 10000 * 10000;
+            }
+            else if (new RegExp(/%/).test(input)) {
+                input = input.replace("%", "");
+                res = Number(input) * 0.01;
+            }
+            return res;
         }
     }
 }
