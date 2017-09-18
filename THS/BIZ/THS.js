@@ -101,7 +101,7 @@ var THS = {
         THS.Log.Start("页面遍历TraversePage");
         //db.Traverse(collectionName, { $or: [/*{ "ContentType": "首页概览" },*//* { "ContentType": "资金流向" },*/ /*{ "ContentType": "公司资料" }, *//*{ "ContentType": "新闻公告" },*//*{ "ContentType": "主力持仓" },*/ /*{ "ContentType": "公司大事" }, */{ "ContentType": "日线数据" }] }, function (data) {//"StockCode": "002417" 
 
-        db.Traverse(collectionName, { $or: [{ "ContentType": "首页概览" }, { "ContentType": "资金流向" }] }, function (data) {//"StockCode": "002417" 
+        db.Traverse(collectionName, { $or: [{ "ContentType": "日线数据" }] }, function (data) {//"StockCode": "002417" { "ContentType": "首页概览" }, { "ContentType": "资金流向" }
             var res = {};
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
@@ -192,6 +192,9 @@ var THS = {
             }
             else if (data.ContentType === "资金流向") {
                 THS_BI.FundsAnalyse(res.StockCode, res.StockName, data.Funds);
+            }
+            else if (data.ContentType === "日线数据") {
+                THS_BI.CalTargetStock(res.StockCode, res.StockName, data.DayLine);
             }
 
         }, function (endMsg) {
