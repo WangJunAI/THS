@@ -1,6 +1,7 @@
 ﻿var MongoDB = require("../Core/MongoDB");
 var PARAM_CHECKER = require("../Core/PARAM_CHECKER");
 var TOOLS = require("../Core/TOOLS")
+var fs = require('fs');
 
 var $ = require('cheerio');
 
@@ -28,7 +29,14 @@ var THS_BI = {
         Save: function () {
             console.log("正在保存BI数据");
             var db = THS_BI.DB.GetDB();
-            db.Save("THSBI", THS_BI.MemData, function () { }, 0);
+            db.Save("THSBI", THS_BI.MemData, function () {
+                fs.writeFile('E:\\area.js', "var areaData="+JSON.stringify(THS_BI.MemData["地域分布"]));
+                fs.writeFile('E:\\conception.js', "var conceptionData=" + JSON.stringify(THS_BI.MemData["概念分布"]));
+                fs.writeFile('E:\\NetAssets.js', "var netAssetsData=" + JSON.stringify(THS_BI.MemData["每股净资产"]));
+                fs.writeFile('E:\\ShareEarnings.js', "var shareEarningsData=" + JSON.stringify(THS_BI.MemData["每股收益"]));
+                fs.writeFile('E:\\growthRate.js', "var growthRateData=" + JSON.stringify(THS_BI.MemData["净利润增长率"]));
+                fs.writeFile('E:\\CashFlow.js', "var cashFlowData=" + JSON.stringify(THS_BI.MemData["每股现金流"]));
+            }, 0);
         },
         GetDB: function () {
             var opt = MongoDB.GetEmptyOption();
