@@ -38,7 +38,17 @@
     <Compile Include="BIZ\THS.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="BIZ\THSDB.js" />
+    <Compile Include="BIZ\THSFundsTracking.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BIZ\THSHistoryTest.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="BIZ\THS_BI.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BIZ\TouTiao.js">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BIZ\WIKI.js">

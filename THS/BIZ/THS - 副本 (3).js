@@ -3,7 +3,6 @@ var PARAM_CHECKER = require("../Core/PARAM_CHECKER");
 var TOOLS = require("../Core/TOOLS")
 var THS_BI = require("../BIZ/THS_BI");
 var THSHistoryTest = require("../BIZ/THSHistoryTest");
-var THSDB = require("../BIZ/THSDB");
 
 var $ = require('cheerio');
 var count = 0;
@@ -59,11 +58,8 @@ var THS = {
         }
     },
     TraversePage: function () {
-        //var db = THS.GetDB();
-        var db = THSDB.GetMongo01();
-
-        //var collectionName = THS.Const.Collection.Page;///原始页面所在集合
-        collectionName = THSDB.Mongo01Table.Page;///
+        var db = THS.GetDB();
+        var collectionName = THS.Const.Collection.Page;///原始页面所在集合
 
         ///日志计时
         THS.Log.Start("页面遍历TraversePage " + collectionName);
@@ -75,7 +71,6 @@ var THS = {
             res.StockName = data.StockName;
             res.ContentType = data.ContentType;
             console.log("Traverse 正在分析页面 " + collectionName+"  " + (++count) + "  " + res.StockCode + res.StockName + " " + data.ContentType);
-
             if ("首页概览" === data.ContentType) {
                 var home = THS.AnalysePageHome(data);///OK
                 res.Home = home;

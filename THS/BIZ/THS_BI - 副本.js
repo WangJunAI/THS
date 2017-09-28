@@ -496,6 +496,7 @@ THS_BI.CalFunds = function (stockCode, stockName, source) {
 }
 
  
+
 THS_BI.RecommandStock = function () {
     ///每股收益5毛以上
     ///且净利润增长100 % 以上
