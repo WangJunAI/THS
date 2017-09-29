@@ -4,6 +4,8 @@ var TOOLS = require("../Core/TOOLS")
 var THS_BI = require("../BIZ/THS_BI");
 var THSHistoryTest = require("../BIZ/THSHistoryTest");
 var THSDB = require("../BIZ/THSDB");
+var THSPageFundsTracking = require("../BIZ/THSPageFundsTracking");
+var MemQueue = require("../Core/MemQueue");
 
 var $ = require('cheerio');
 var count = 0;
@@ -20,11 +22,11 @@ var THS = {
     },
     Const: {
         Collection: {
-            Tag:"0921",
-            Page: "Page" +"0921", ///原始页面,
+            Tag: "0921",
+            Page: "Page" + "0921", ///原始页面,
             PageData: "PageData" + "0921",///页面一级提取数据
             Log: "Log" + "0921",///性能日志
-            AnalysisResult: "AnalysisResult" +"0921",
+            AnalysisResult: "AnalysisResult" + "0921",
         }
     },
     Log: {
@@ -32,7 +34,7 @@ var THS = {
         ///开始计时
         Start: function (logItemName) {
             return;
-            THS.Log.data[logItemName] = { StartTime: new Date(), StopTime : new Date() };
+            THS.Log.data[logItemName] = { StartTime: new Date(), StopTime: new Date() };
         },
         ///
         Stop: function (logItemName) {
@@ -49,13 +51,13 @@ var THS = {
     },
     Dict: {},
     DB: null,
-    QueueW:[],
+    QueueW: [],
     SavePageData: function (item) {
- 
+
         {
             var collectionName = THS.Const.Collection.PageData;///原始页面所在集合
-             var db = THS.GetDB();
-             db.Save(collectionName, item, function () {console.log("保存完毕"+item.StockName) }, 0);
+            var db = THS.GetDB();
+            db.Save(collectionName, item, function () { console.log("保存完毕" + item.StockName) }, 0);
         }
     },
     TraversePage: function () {
@@ -74,7 +76,7 @@ var THS = {
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
             res.ContentType = data.ContentType;
-            console.log("Traverse 正在分析页面 " + collectionName+"  " + (++count) + "  " + res.StockCode + res.StockName + " " + data.ContentType);
+            console.log("Traverse 正在分析页面 " + collectionName + "  " + (++count) + "  " + res.StockCode + res.StockName + " " + data.ContentType);
 
             if ("首页概览" === data.ContentType) {
                 var home = THS.AnalysePageHome(data);///OK
@@ -154,8 +156,8 @@ var THS = {
             var res = {};
             res.StockCode = data.StockCode;
             res.StockName = data.StockName;
-            
-            console.log("已获取处理 TraverseData  " + collectionName+"  " + res.StockCode + "--" + res.StockName + " " + data.ContentType);
+
+            console.log("已获取处理 TraverseData  " + collectionName + "  " + res.StockCode + "--" + res.StockName + " " + data.ContentType);
             if (data.ContentType === "首页概览") {
                 //THS_BI.OverallAnalyse(res.StockCode, res.StockName, data.Home.Company);
             }
@@ -180,6 +182,15 @@ var THS = {
         }, function (errMsg) {
             console.log("出错");
         });
+    },
+    ///
+    TraversePageFundsTracking: function () {
+        var db = THSDB.GetMongo01();
+        collectionName = THSDB.Mongo01Table.PageFundsTracking;
+        var callbackProc = THSPageFundsTracking.GetPageData_ddzz;
+        var filter = {};
+
+        THSDB.TraversePager(db,collectionName, callbackProc,{} );
     },
 
     ///分析首页概览数据

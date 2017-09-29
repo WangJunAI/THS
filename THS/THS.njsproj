@@ -39,12 +39,10 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BIZ\THSDB.js" />
-    <Compile Include="BIZ\THSFundsTracking.js">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="BIZ\THSHistoryTest.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="BIZ\THSPageFundsTracking.js" />
     <Compile Include="BIZ\THS_BI.js">
       <SubType>Code</SubType>
     </Compile>
@@ -54,6 +52,9 @@
     <Compile Include="BIZ\WIKI.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Core\CallbackQueue.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Core\CONST.js" />
     <Compile Include="Core\Convertor.js">
       <SubType>Code</SubType>
@@ -61,6 +62,9 @@
     <Compile Include="Core\DBIterator.js" />
     <Compile Include="Core\HttpService.js" />
     <Compile Include="Core\LocalService.js" />
+    <Compile Include="Core\MemQueue.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Core\ModuleLoader.js" />
     <Compile Include="Core\MongoDB - 副本.js" />
     <Compile Include="Core\MongoDB.js" />

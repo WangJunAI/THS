@@ -134,7 +134,7 @@ var MongoDB = {
                         
                         if (PARAM_CHECKER.IsFunction(callback)) {
                             ///若是有回调
-                            callback(saveErr, result, _THIS.QueneIN.length);
+                            callback(saveErr, result);
                         }
                         
                         _THIS._Save();
@@ -173,7 +173,38 @@ var MongoDB = {
             }
         });
     },
-     
+    
+    ///保存一个对象
+    __Save: function (collectionName , jsonData, callback, retryCount) {
+        var loader = MongoDB.GetLoader();
+        var mongo = loader.LoadMongoDB();
+        var checker = MongoDB.checker;
+        mongo.connect(MongoDB._url, function (err, db) {
+            if (null == err || undefined == err) {
+                ///保存成功
+                if (checker.IsValid(jsonData.ID)) {
+                    ///若有ID,则插入
+                    db.collection(collectionName).findOneAndUpdate({ ID: jsonData.ID }, { $set: jsonData }, { upsert: true }, function (err, result) {
+                        db.close();
+                        console.log("保存结果-" + result);
+                    });
+                }
+                else {
+                    MongoDB.GetNewID(collectionName, function (newId) {
+                        jsonData.ID = newId;
+                        db.collection(collectionName).insert(jsonData, function (err, result) {
+                            db.close();
+                            console.log("插入结果-" + result);
+                        });
+                    });
+                }
+            }
+            else {
+                db.close();
+                console.log("保存失败-" + err);
+            }
+        });
+    },
     
     ///移除一个对象
     Remove: function (collectionName , jsonData, callback, retryCount) {
@@ -516,9 +547,8 @@ var MongoDB = {
                             collection.count(function (err, count) {
                                 // Assuming no errors, 'count' should have your answer
                                 summaryInfo.TotalCount = count;
-                                summaryInfo.CurrentIndex =pageIndex;
-                                summaryInfo.NextIndex = (pageIndex+1);
-                                summaryInfo.PageSize = pageSize;
+                                summaryInfo.CurrentPage = { PageIndex: pageIndex, PageSize: pageSize };
+                                summaryInfo.NextPage = { PageIndex: (pageIndex+1), PageSize: pageSize };
                                 summaryInfo.IsLastPage = (pageIndex + 1) * pageSize < summaryInfo.TotalCount;
                                 summaryInfo.DataArray = dataArray;
                                 //summaryInfo.NextFunc = 

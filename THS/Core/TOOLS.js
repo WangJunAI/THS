@@ -1,5 +1,5 @@
 ﻿var PARAM_CHECKER = require("./PARAM_CHECKER");
-
+var $ = require('cheerio');
 ///常用工具
 var TOOLS = {
     ///日期常用
@@ -33,8 +33,8 @@ var TOOLS = {
             var res = input.slice(-2, -1);
         },
         ///
-        SubStringReplace: function (startIndex,endIndex,replaceObj) {
-            
+        SubStringReplace: function (startIndex, endIndex, replaceObj) {
+
         },
         ///将转换为数字
         ToNumber: function (input) {
@@ -53,6 +53,30 @@ var TOOLS = {
                 input = input.replace("%", "");
                 res = Number(input) * 0.01;
             }
+            return res;
+        }
+    },
+    HTML: {
+        TableToJson: function (tableHtml) {
+            var $page = $(tableHtml);
+            var theadTdArray = $page.find("thead th");
+            var tbodyTrArray = $page.find("tbody tr");
+            var res = { Column: {}, Data: [] };
+            for (var i = 0; i < theadTdArray.length; i++) {
+                var $td = $(theadTdArray[i]);
+                res.Column["C" + (1 + i)] = $td.text();
+            }
+
+            for (var i = 0; i < tbodyTrArray.length; i++) {
+                var tdArray = $($(tbodyTrArray[i])[0]).find("td");
+                var item = {};
+                for (var j = 0; j < tdArray.length; j++) {
+                    var $td = $(tdArray[j]);
+                    item["C" + (j + 1)] = $td.text();
+                }
+                res.Data.push(item);
+            }
+
             return res;
         }
     }
