@@ -59,6 +59,12 @@
     <Compile Include="Core\Convertor.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Core\CryptoTools.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Core\DataTools.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Core\DBIterator.js" />
     <Compile Include="Core\HttpService.js" />
     <Compile Include="Core\LocalService.js" />

@@ -6,6 +6,7 @@ var THSHistoryTest = require("../BIZ/THSHistoryTest");
 var THSDB = require("../BIZ/THSDB");
 var THSPageFundsTracking = require("../BIZ/THSPageFundsTracking");
 var MemQueue = require("../Core/MemQueue");
+var DataTools = require("../Core/DataTools");
 
 var $ = require('cheerio');
 var count = 0;
@@ -183,15 +184,18 @@ var THS = {
             console.log("出错");
         });
     },
-    ///
+    ///大单追踪
     TraversePageFundsTracking: function () {
+
+    },
+
+    ClearPageFundsTracking: function () {
         var db = THSDB.GetMongo01();
         collectionName = THSDB.Mongo01Table.PageFundsTracking;
-        var callbackProc = THSPageFundsTracking.GetPageData_ddzz;
-        var filter = {};
 
-        THSDB.TraversePager(db,collectionName, callbackProc,{} );
+        DataTools.LogDuplicateData(db, collectionName, ["Page"]);
     },
+ 
 
     ///分析首页概览数据
     AnalysePageHome: function (pageData) {

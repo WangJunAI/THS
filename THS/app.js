@@ -13,7 +13,7 @@ var news = require("./BIZ/NEWS");
 var ths = require("./BIZ/THS");
 //ths.TraversePage();
 //ths.TraverseData();
-ths.TraversePageFundsTracking();
+ths.ClearPageFundsTracking();
 
 
 

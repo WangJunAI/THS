@@ -14,7 +14,7 @@ var THSDB = {
             opt.url = "mongodb://192.168.0.140:27017/ths";
             var db = MongoDB.GetInst("ths", opt);
             THSDB.Mongo01Table = {};
-            var tag = "0929";
+            var tag = "0927";
             THSDB.Mongo01Table["PageFundsTracking"] = "PageFundsTracking" + tag;///大单追踪原始数据
             THSDB.Mongo01Table["PageData"] = "PageData" + tag;///从页面抽取的数据
             THSDB.Mongo01Table["Page"] = "Page" + tag;///页面原始数据
@@ -28,29 +28,30 @@ var THSDB = {
         db.Traverse(collectionName, {}, function (data) {
             callback(data);
         });
-    }, 
-    ///遍历
-    TraversePager: function (db, collectionName, callbackProc, filter,nextPager) {
+    },
 
+    ///遍历
+    TraversePager: function (db, collectionName, callbackProc, filter,saveToCollectionName) {
         var callbackFind = function (summary) {
-            ///获取一页数据以后
             var dataArray = summary.DataArray;
             while (0 < dataArray.length) {
                 var qItem = dataArray.pop();
-                callbackProc(qItem, summary);///处理函数
+                var pageData = callbackProc(qItem);///处理函数
+
+                if (PARAM_CHECKER.IsNotEmptyString(saveToCollectionName)) {
+                    db.Save(saveToCollectionName, pageData, function (err, res, remaining) {
+                        console.log("剩余数量 " + remaining + " 当前索引页面" + summary.CurrentIndex + "  ");
+                        if (0 === remaining) {
+                            db.TraversePager(collectionName, {}, summary.NextIndex, summary.PageSize, callbackFind, callbackErr); ///下一次遍历
+                        }
+                    }, 0);
+                }
             }
         }
 
-        var callbackErr = function (err) { console.log("TraversePager " + err) };
+        var callbackErr = function (err) { console.log("TraversePager "+err) };
 
-        if (PARAM_CHECKER.IsObject(nextPager) && PARAM_CHECKER.IsInt(nextPager.NextIndex) && PARAM_CHECKER.IsInt(nextPager.PageSize)) {
-            console.log("正在获取" + collectionName + " " + nextPager.NextIndex);
-            db.TraversePager(collectionName, {}, nextPager.NextIndex, nextPager.PageSize, callbackFind, callbackErr);
-        }
-        else {
-            db.TraversePager(collectionName, {}, 0, 100, callbackFind, callbackErr);
-        }
-
+        db.TraversePager(collectionName, {}, 0, 100, callbackFind, callbackErr);
     },
 
     Save: function (db, collectionName, data, callback) {

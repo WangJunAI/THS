@@ -506,7 +506,6 @@ var MongoDB = {
 
                 cursor.on("data", function (data) {
                     dataArray.push(data);
-  
                 });
                  
                 cursor.on("end", function (data) {
