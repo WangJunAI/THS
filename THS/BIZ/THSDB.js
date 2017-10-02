@@ -55,6 +55,11 @@ var THSDB = {
 
     Save: function (db, collectionName, data, callback) {
         db.Save(collectionName, data, function () { console.log("保存完毕" + collectionName + " " + new Date().getTime());  }, 0);
+    },
+
+    ///删除数据库中的重复数据
+    RemoveDuplicateData: function (collectionName) {
+
     }
 }
 

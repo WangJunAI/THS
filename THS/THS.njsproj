@@ -43,6 +43,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BIZ\THSPageFundsTracking.js" />
+    <Compile Include="BIZ\THSPageStock.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="BIZ\THS_BI.js">
       <SubType>Code</SubType>
     </Compile>

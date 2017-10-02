@@ -193,7 +193,8 @@ var THS = {
         var db = THSDB.GetMongo01();
         collectionName = THSDB.Mongo01Table.PageFundsTracking;
 
-        DataTools.LogDuplicateData(db, collectionName, ["Page"]);
+        //DataTools.LogDuplicateData(db, collectionName, ["Page"]);
+        DataTools.RemoveDuplicateData(db, DataTools.CollectionName, ["Page"]);
     },
  
 

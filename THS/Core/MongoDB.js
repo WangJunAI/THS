@@ -183,64 +183,78 @@ var MongoDB = {
             callback: callback,
             retryCount: retryCount
         };
-        MongoDB.QueneRemove.push(item);
+
+        _THIS = this;
+        _THIS.QueneRemove.push(item);
         
-        if (0 < MongoDB.QueneRemove.length && 0 == MongoDB.Status) {
-            MongoDB._Remove();
+        if (0 < _THIS.QueneRemove.length && 0 == _THIS.Status) {
+            _THIS._Remove();
         }
     },
     
     ///移除一个对象
     _Remove: function () {
-        var loader = MongoDB.GetLoader();
-        var mongo = loader.LoadMongoDB();
-        var checker = MongoDB.checker;
-        mongo.connect(MongoDB._url, function (err, db) {
+ 
+        var _THIS = this;
+        _THIS.Status = 1; ///占用状态
+
+        mongo.connect(_THIS._url, function (err, db) {
             if (null == err || undefined == err) {
                 ///若打开成功
-                if (0 < MongoDB.QueneRemove.length) {
-                    MongoDB.Status = 1;
+                if (0 < _THIS.QueneRemove.length) {
                     ///若队列中有数据
-                    var queueItem = MongoDB.QueneRemove.pop();
+                    var queueItem = _THIS.QueneRemove.pop();
                     var collectionName = queueItem.collectionName;
                     var jsonData = queueItem.jsonData;
                     var callback = queueItem.callback;
                     var retryCount = queueItem.retryCount;
-                    
-                    if (checker.IsString(jsonData._id)) {
+
+                    if (PARAM_CHECKER.IsNotEmptyString(jsonData._id)) {
                         var _id = new mongo.ObjectID(jsonData._id);
                         jsonData._id = _id;
                     }
                     
                     db.collection(collectionName).remove({ _id: jsonData._id }, function (err, result) {
                         db.close();
-                        //MongoDB.QueneOUT.push({ callback: callback, err: err, result: result });
-                        if (null == err) {
-                            console.log("删除成功-" + MongoDB.QueneRemove.length + "-" + result.insertedCount + "-" + MongoDB.Status);
+                        if (null === err) {
+                            console.log("删除成功-" + _THIS.QueneRemove.length + "-" + result.insertedCount + "-" + _THIS.Status);
                         }
                         else {
-                            MongoDB.Status = 0;
-                            console.log("------------------------------删除失败-" + MongoDB.QueneRemove.length + "-" + JSON.stringify(err));
+                            _THIS.Status = 0;
+                            console.log("删除失败-" + _THIS.QueneRemove.length + "-" + JSON.stringify(err));
                         }
                         
-                        if (checker.IsFunction(callback)) {
+                        if (PARAM_CHECKER.IsFunction(callback)) {
                             ///若是有回调
-                            callback(err, result);
+                            callback(err, result, _THIS.QueneRemove.length);
                         }
                         
-                        MongoDB._Remove();
+                        _THIS._Remove();
                     });
                 }
                 else {
-                    MongoDB.Status = 0;
-                    db.close();
-                    console.log("队列已空" + "-" + MongoDB.Status);
+                    _THIS.Status = 0;
+
+                    try {
+                        db.close();
+                    }
+                    catch (closeErr) {
+                        //_THIS.QueueLog.push(closeErr);
+                        console.log(closeErr);
+                        throw closeErr;
+                    }
                 }
             }
-            else {
-                MongoDB.Status = 0;
-                db.close();
-                console.log("异常" + JSON.stringify(err) + "-" + MongoDB.Status);
+            else if (null != db && "function" === typeof (db.close)) {
+                _THIS.Status = 0;
+                try {
+                    db.close();
+                }
+                catch (closeErr) {
+                    console.log("closeErr " + closeErr + " connectionErr" + connectionErr);
+                    throw closeErr;
+                }
+                console.log("数据库连接打开异常" + JSON.stringify(connectionErr) + "-" + _THIS.Status);
             }
         });
     },
@@ -518,7 +532,7 @@ var MongoDB = {
                                 summaryInfo.CurrentIndex =pageIndex;
                                 summaryInfo.NextIndex = (pageIndex+1);
                                 summaryInfo.PageSize = pageSize;
-                                summaryInfo.IsLastPage = (pageIndex + 1) * pageSize < summaryInfo.TotalCount;
+                                summaryInfo.IsLastPage = pageIndex * pageSize < summaryInfo.TotalCount && summaryInfo.TotalCount <= (pageIndex + 1) * pageSize;
                                 summaryInfo.DataArray = dataArray;
                                 //summaryInfo.NextFunc = 
                                 if (null != db) {

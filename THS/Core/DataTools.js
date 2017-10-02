@@ -5,7 +5,9 @@ var PARAM_CHECKER = require("../Core/PARAM_CHECKER")
 var DataTools = {
     Data: {
         DuplicateData: {}
-    }
+    },
+
+    CollectionName:"LogDuplicateData0929",
 }
  ///数据去重
 DataTools.CheckDuplicateData = function (id, filed, checkdata) {
@@ -35,7 +37,7 @@ DataTools.LogDuplicateData = function (db,collectionName,filedArray) {
             chkRes.CollectionName = collectionName;
             if (true === chkRes.Exist) {
                 ///将要删除的文档记录到其他表
-                db.Save("LogDuplicateData0929", chkRes, function (err, res, remaining) {
+                db.Save(DataTools.CollectionName, chkRes, function (err, res, remaining) {
                     console.log("发现重复数据 " + chkRes.Md5);
                     console.log("剩余数量 " + remaining + " 当前索引页面" + pagerInfo.CurrentIndex + "  ");
                     if (0 === remaining) {
@@ -57,9 +59,32 @@ DataTools.LogDuplicateData = function (db,collectionName,filedArray) {
     var callbackErr = function (err) { console.log("TraversePager " + err) };
 
     db.TraversePager(collectionName, {}, 0, 100, callbackFind, callbackErr);
- 
 }
 
+///重复数据移除
+DataTools.RemoveDuplicateData = function (db, collectionName) {
+    var callbackFind = function (pagerInfo) {
+        ///获取一页数据以后
+        var dataArray = pagerInfo.DataArray;
+        while (0 < dataArray.length) {
+            var qItem = dataArray.pop();
+            var id = qItem.ItemID;
+            var targetCollectionName = qItem.CollectionName;
+            var filter = { _id: id };
+            db.Remove(targetCollectionName, filter, function (err, result, remaining) {
+                console.log("正在删除 " + id + " 当前页码 " + pagerInfo.CurrentIndex);
+                if (0 === remaining) {
+                    db.TraversePager(collectionName, {}, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
+                }
+            }, 0);
+        }
+    }
+
+    var callbackErr = function (err) { console.log("TraversePager " + err) };
+
+    db.TraversePager(collectionName, {}, 0, 100, callbackFind, callbackErr);
+}
+ 
 
 
 module.exports = DataTools;
