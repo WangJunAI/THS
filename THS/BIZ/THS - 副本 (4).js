@@ -1,9 +1,205 @@
-﻿var $ = require('cheerio');
+﻿var MongoDB = require("../Core/MongoDB");
+var PARAM_CHECKER = require("../Core/PARAM_CHECKER");
+var TOOLS = require("../Core/TOOLS")
+var THS_BI = require("../BIZ/THS_BI");
+var THSHistoryTest = require("../BIZ/THSHistoryTest");
+var THSDB = require("../BIZ/THSDB");
+var THSPageFundsTracking = require("../BIZ/THSPageFundsTracking");
+var MemQueue = require("../Core/MemQueue");
+var DataTools = require("../Core/DataTools");
 
-///同花顺个股页面分析 
-var THSPageStock = {
+var $ = require('cheerio');
+var count = 0;
+///同花顺业务处理
+var THS = {
+    GetDB: function () {
+        var opt = MongoDB.GetEmptyOption();
+        opt.url = "mongodb://192.168.0.140:27017/ths";
+        var db = MongoDB.GetInst("ths", opt);
+        if (null === THS.DB) {
+            THS.DB = db;
+        }
+        return THS.DB;
+    },
+    Const: {
+        Collection: {
+            Tag: "0921",
+            Page: "Page" + "0921", ///原始页面,
+            PageData: "PageData" + "0921",///页面一级提取数据
+            Log: "Log" + "0921",///性能日志
+            AnalysisResult: "AnalysisResult" + "0921",
+        }
+    },
+    Log: {
+        data: {},
+        ///开始计时
+        Start: function (logItemName) {
+            return;
+            THS.Log.data[logItemName] = { StartTime: new Date(), StopTime: new Date() };
+        },
+        ///
+        Stop: function (logItemName) {
+            return;
+            THS.Log.data[logItemName].StopTime = new Date();
+            THS.Log.data[logItemName].ItemName = logItemName;
+            THS.Log.data[logItemName].Duration = THS.Log.data[logItemName].StopTime - THS.Log.data[logItemName].StartTime;
+            var collectionName = THS.Const.Collection.Log;
+            var db = THS.GetDB();
+            db.Save(collectionName, THS.Log.data[logItemName], function () {
+                delete THS.Log.data[logItemName];
+            }, 0);
+        }
+    },
+    Dict: {},
+    DB: null,
+    QueueW: [],
+    SavePageData: function (item) {
+
+        {
+            var collectionName = THS.Const.Collection.PageData;///原始页面所在集合
+            var db = THS.GetDB();
+            db.Save(collectionName, item, function () { console.log("保存完毕" + item.StockName) }, 0);
+        }
+    },
+    TraversePage: function () {
+        //var db = THS.GetDB();
+        var db = THSDB.GetMongo01();
+
+        //var collectionName = THS.Const.Collection.Page;///原始页面所在集合
+        collectionName = THSDB.Mongo01Table.Page;///
+
+        ///日志计时
+        THS.Log.Start("页面遍历TraversePage " + collectionName);
+        //db.Traverse(collectionName, { $or: [/*{ "ContentType": "首页概览" },*//* { "ContentType": "资金流向" },*/ /*{ "ContentType": "公司资料" }, *//*{ "ContentType": "新闻公告" },*//*{ "ContentType": "主力持仓" },*/ /*{ "ContentType": "公司大事" }, */{ "ContentType": "日线数据" }] }, function (data) {//"StockCode": "002417" 
+
+        db.Traverse(collectionName, { $or: [/*{ "ContentType": "首页概览" },*/ { "ContentType": "资金流向" }, { "ContentType": "日线数据" }] }, function (data) {//"StockCode": "002417" { "ContentType": "首页概览" }, { "ContentType": "资金流向" }
+            var res = {};
+            res.StockCode = data.StockCode;
+            res.StockName = data.StockName;
+            res.ContentType = data.ContentType;
+            console.log("Traverse 正在分析页面 " + collectionName + "  " + (++count) + "  " + res.StockCode + res.StockName + " " + data.ContentType);
+
+            if ("首页概览" === data.ContentType) {
+                var home = THS.AnalysePageHome(data);///OK
+                res.Home = home;
+            }
+            else if ("资金流向" === data.ContentType) {
+                var funds = THS.AnalysePageFunds(data);///OK
+                res.Funds = funds;
+            }
+            else if ("公司资料" === data.ContentType) {
+                var company = THS.AnalysePageCompany(data);///OK
+                res.Info = company;
+            }
+            else if ("新闻公告" === data.ContentType) {
+                var news = THS.AnalysePageNews(data);//OK
+                res.News = news;
+            }
+            //else if ("财务分析" === data.ContentType) {
+            //    //THS.AnalysePageFinance(data);
+            //}
+            //else if ("经营分析" === data.ContentType) {
+            //    //THS.AnalysePageOperate(data);
+            //}
+            //else if ("股东股本" === data.ContentType) {
+            //    //var holder = THS.AnalysePageHolder(data);
+
+            //}
+            else if ("主力持仓" === data.ContentType) {
+                var position = THS.AnalysePagePosition(data);//OK
+                res.Position = position;
+            }
+            else if ("公司大事" === data.ContentType) {
+                var event = THS.AnalysePageEvent(data);//OK
+                res.Event = event;
+            }
+            //else if ("分红融资" === data.ContentType) {
+            //    //THS.AnalysePageBonus(data);
+            //}
+            //else if ("价值分析" === data.ContentType) {
+            //    //THS.AnalysePageWorth(data);
+            //}
+            //else if ("行业分析" === data.ContentType) {
+            //    //THS.AnalysePageField(data);
+            //}
+            else if ("日线数据" === data.ContentType) {
+                var dayLine = THS.AnalysePageDayLine(data);///OK
+                res.DayLine = dayLine;
+            }
+
+            //THS.SavePageData(res);
+            THS.QueueW.push(res);
+            console.log("Queue.Length " + THS.QueueW.length);
+        }, function (endMsg) {
+            console.log("遍历结束");
+
+            while (0 < THS.QueueW.length) {
+                var q = THS.QueueW.pop();
+                console.log("开始保存一个数据" + q.StockName);
+                THS.SavePageData(q);
+            }
+
+
+            THS.Log.Stop("页面遍历TraversePage");
+        }, function (errMsg) {
+            console.log("出错");
+        });
+    },
+
+    ///页面数据分析
+    TraverseData: function () {
+        ///日志计时
+        THS.Log.Start("页面数据遍历TraverseData");
+
+        var db = THS.GetDB();
+        var collectionName = THS.Const.Collection.PageData;
+        db.Traverse(collectionName, {}, function (data) {
+            var res = {};
+            res.StockCode = data.StockCode;
+            res.StockName = data.StockName;
+
+            console.log("已获取处理 TraverseData  " + collectionName + "  " + res.StockCode + "--" + res.StockName + " " + data.ContentType);
+            if (data.ContentType === "首页概览") {
+                //THS_BI.OverallAnalyse(res.StockCode, res.StockName, data.Home.Company);
+            }
+            else if (data.ContentType === "资金流向") {
+                //THS_BI.FundsAnalyse(res.StockCode, res.StockName, data.Funds);
+            }
+            else if (data.ContentType === "日线数据") {
+                //THS_BI.CalTargetStock(res.StockCode, res.StockName, data.DayLine);
+                THSHistoryTest.PrepareData(data);
+            }
+
+        }, function (endMsg) {
+            THS.Log.Stop("页面数据遍历TraverseData");
+            console.log("遍历结束");
+            //THS_BI.Save();
+            var historyTest = THSHistoryTest.FindIncrease();
+            for (var i = 0; i < historyTest.length; i++) {
+                db.Save(THS.Const.Collection.AnalysisResult, historyTest[i], function () { console.log("历史回测数据保存完毕" + i) }, 0);
+            }
+
+
+        }, function (errMsg) {
+            console.log("出错");
+        });
+    },
+    ///大单追踪
+    TraversePageFundsTracking: function () {
+
+    },
+
+    ClearPageFundsTracking: function () {
+        var db = THSDB.GetMongo01();
+        collectionName = THSDB.Mongo01Table.PageFundsTracking;
+
+        //DataTools.LogDuplicateData(db, collectionName, ["Page"]);
+        DataTools.RemoveDuplicateData(db, DataTools.CollectionName, ["Page"]);
+    },
+ 
+
     ///分析首页概览数据
-    AnalysePageHome: function (dbItem) {
+    AnalysePageHome: function (pageData) {
         var $page = $(pageData.Page);
         var home = {};
 
@@ -20,7 +216,7 @@ var THSPageStock = {
                 if ("string" === typeof ($(dt_dd[i]).attr("title")) && 0 < $(dt_dd[i]).attr("title").length) {
                     dd = $(dt_dd[i]).attr("title");///获取完整字符串
                 }
-                else {
+                else  {
                     dd = dd.replace('元', '').replace('亿', '').replace('%', '');
                     if (false === isNaN(dd)) {
                         ///如果是数字
@@ -30,8 +226,8 @@ var THSPageStock = {
                         ///若转换日期成功
                         dd = TOOLS.Convertor.ToDate(dd);
                     }
-
-                }
+                    
+                } 
                 company.Value.push(dd);
             }
         }
@@ -65,7 +261,7 @@ var THSPageStock = {
             var item = {
                 Text: text,
                 Href: href,
-                Date: TOOLS.Convertor.ToDate("2017-" + date),
+                Date: TOOLS.Convertor.ToDate("2017-"+date),
             };
 
             gsgg.push(item);
@@ -127,7 +323,7 @@ var THSPageStock = {
                     C2: Number(c2),
                     C3: Number(c3),
                     C4: Number(c4),
-                    C5: Number(c5.replace('%', '')),
+                    C5: Number(c5.replace('%','')),
                     C6: c6,
                     C7: c7,
                 };
@@ -258,7 +454,7 @@ var THSPageStock = {
                 Today: lhbToday,
                 Yesterday: lhbYesterday,
                 TodayCal: lhbTodayCal,
-                YestodayCal: lhbYesterdayCal,
+                YestodayCal:lhbYesterdayCal,
             },
             Intro: {
                 Company: "公司概况",
@@ -266,16 +462,16 @@ var THSPageStock = {
                 GSGG: "公司公告",
                 HYZX: "行业资讯",
                 YJBG: "研究报告",
-                DZJY: { Name: "大宗交易", Column: { C1: "交易日期", C2: "成交价(元)", C3: "成交金额(万元)", C4: "成交量(万股)", C5: "溢价率", C6: "买入营业部", C7: "卖出营业部" } },
+                DZJY: { Name: "大宗交易", Column: { C1: "交易日期", C2: "成交价(元)", C3: "成交金额(万元)", C4: "成交量(万股)", C5: "溢价率", C6: "买入营业部", C7: "卖出营业部"}},
                 RZRQ: { Name: "融资融券", Column: { C1: "交易日期", C2: "融资余额(亿元)", C3: "融资余额/流通市值", C4: "融资买入额(亿元)", C5: "融券卖出量(万股)", C6: "融券余量(万股)", C7: "融券余额(万元)", C8: "融资融券余额(亿元)" } },
-                LHB: { Name: "龙虎榜", Column: { Href: "营业部链接", YYBName: "营业部名称", MRJE: "买入金额", MRBL: "买入金额占总成交比例", MCJE: "卖出金额", MCBL: "卖出金额占总成交比例" }, Cal: { MRZJ: "买入总计", MCZJ: "卖出总计", MMJC: "买卖净差" } },
+                LHB: { Name: "龙虎榜", Column: { Href: "营业部链接", YYBName: "营业部名称", MRJE: "买入金额", MRBL: "买入金额占总成交比例", MCJE: "卖出金额", MCBL: "卖出金额占总成交比例" }, Cal: { MRZJ: "买入总计", MCZJ: "卖出总计",MMJC: "买卖净差"}},
             }
         };
 
         if (0 < home.DZJY.length) {
             var q = 0;
         }
-        if (0 < home.RZRQ.length) {
+        if ( 0 < home.RZRQ.length) {
             var q = 0;
         }
         if (0 < home.LHB.Today.length) {
@@ -287,7 +483,7 @@ var THSPageStock = {
         // console.log($(company_details).html()); ///这个会有编码问题
     },
     ///分析资金流向数据
-    AnalysePageFunds: function (dbItem) {
+    AnalysePageFunds: function (pageData) {
         var $page = $(pageData.Page);
         var funds = {};
         ///历史资金数据一览
@@ -322,18 +518,18 @@ var THSPageStock = {
             };
             fundsHistoryList.push(dataRow);
         }
-        ///数据组装
-        funds.Column = { C1: "日期", C2: "收盘价", C3: "涨跌幅", C4: "资金净流入", C5: "5日主力净额", C6: "大单(主力) - 净额", C7: "大单(主力) - 净占比", C8: "中单 - 净额", C9: "中单 - 净占比", C10: "小单 - 净额", C11: "小单 - 净占比" };
-        funds.List = fundsHistoryList;
+            ///数据组装
+            funds.Column = { C1: "日期", C2: "收盘价", C3: "涨跌幅", C4: "资金净流入", C5: "5日主力净额", C6: "大单(主力) - 净额", C7: "大单(主力) - 净占比", C8: "中单 - 净额", C9: "中单 - 净占比", C10: "小单 - 净额", C11: "小单 - 净占比" };
+            funds.List = fundsHistoryList;
 
-        return funds;
-
-
+            return funds;
+        
+         
         // console.log($(company_details).html()); ///这个会有编码问题
     },
 
     ///分析公司资料数据
-    AnalysePageCompany: function (dbItem) {
+    AnalysePageCompany: function (pageData) {
         var $page = $(pageData.Page);
         var Info = {};
 
@@ -347,17 +543,17 @@ var THSPageStock = {
                 var key = $(tdArray[j]).find("strong").text().replace("：", "");
                 var value = null;
                 if ("公司简介" === key) {
-                    value = $(tdArray[j]).find("p").text();
+                     value = $(tdArray[j]).find("p").text();
                 }
                 else {
-                    value = $(tdArray[j]).find("span").text();
+                     value = $(tdArray[j]).find("span").text();
                 }
-
-                base[key] = value;
+                
+                base[key]= value;
             }
         }
 
-
+ 
 
         ///高管介绍
         ///预处理 移除$(".person_table").remove()
@@ -370,11 +566,11 @@ var THSPageStock = {
             var tab = managerTabs[i];
             var tableName = $(tab).attr("targ");
             var tableTitle = $(tab).text();
-            var group = { Tab: tableTitle, Mgr: [] };
+            var group = { Tab: tableTitle,Mgr:[] };
             var trArray = $page.find("#manager  #" + tableName + " .managelist tbody").eq(0).children();// $("#manager #ml_001 .managelist tbody:eq(0)").children()
             for (var j = 0; j < trArray.length; j++) {
                 var tdArray = $(trArray[j]).find("td");
-                var c1 = { Name: $(tdArray[0]).text(), Job: $(tdArray[1]).text(), Holding: $(tdArray[2]).text() };
+                var c1 = { Name: $(tdArray[0]).text(), Job: $(tdArray[1]).text(), Holding: $(tdArray[2]).text()};
                 var c2 = { Name: $(tdArray[3]).text(), Job: $(tdArray[4]).text(), Holding: $(tdArray[5]).text() };
                 group.Mgr.push(c1);
                 group.Mgr.push(c2);
@@ -388,8 +584,8 @@ var THSPageStock = {
         var publish = {};
         for (var i = 0; i < publishTdArray.length; i++) {
             var td = publishTdArray[i];
-            var key = $(td).find("strong").text().replace("：", "");
-            var value = "";
+            var key = $(td).find("strong").text().replace("：","");
+            var value ="";
             if ("历史沿革" === key) {
                 value = $(td).find("p").text();
             }
@@ -419,9 +615,9 @@ var THSPageStock = {
                 C1: c1,
                 C2: c2,
                 C3: c3,
-                C4: TOOLS.STR.ToNumber(c4),
-                C5: TOOLS.STR.ToNumber(c5),
-                C6: TOOLS.STR.ToNumber(c6),
+                C4: TOOLS.STR.ToNumber( c4),
+                C5: TOOLS.STR.ToNumber( c5),
+                C6:  TOOLS.STR.ToNumber( c6),
                 C7: c7,
                 C8: c8,
             };
@@ -436,8 +632,8 @@ var THSPageStock = {
     },
 
     ///分析新闻公告数据 http://stockpage.10jqka.com.cn/ajax/code/002417/type/news/
-    AnalysePageNews: function (dbItem) {
-        var $page = $(pageData.Page.replace("success<!-- 热点新闻模板 -->", ""));
+    AnalysePageNews: function (pageData) {
+        var $page = $(pageData.Page.replace("success<!-- 热点新闻模板 -->",""));
 
         var news = {};
         ///热点新闻
@@ -453,8 +649,8 @@ var THSPageStock = {
             var date = $(li).find("a span").text();
             var item = {
                 Title: title,
-                Href: href,
-                Date: date
+                Href:href,
+                Date:date
             };
             companyNews.push(item);
         }
@@ -464,7 +660,7 @@ var THSPageStock = {
     },
 
     ///分析财务分析数据
-    AnalysePageFinance: function (dbItem) {
+    AnalysePageFinance: function (pageData) {
         var $page = $(pageData.Page);
         var finance = {};
 
@@ -473,7 +669,7 @@ var THSPageStock = {
     },
 
     ///分析经营分析数据
-    AnalysePageOperate: function (dbItem) {
+    AnalysePageOperate: function (pageData) {
         var $page = $(pageData.Page);
 
         ///主营介绍
@@ -542,7 +738,7 @@ var THSPageStock = {
     },
 
     ///分析股东股本数据
-    AnalysePageHolder: function (dbItem) {
+    AnalysePageHolder: function (pageData) {
         var $page = $(pageData.Page);
         var holder = {};
 
@@ -597,7 +793,7 @@ var THSPageStock = {
         for (var t = 1; t < 6; t++) {
             var key = $($page.find("#bd_1 li").eq(t - 1)).text();
 
-            var circulationTrArray = $page.find("##bd_list1 #fher_" + t + " table tbody  tr"); ///高管持股变动  
+            var circulationTrArray = $page.find("##bd_list1 #fher_"+t+" table tbody  tr"); ///高管持股变动  
             var circulation = [];
             for (var i = 0; i < circulationTrArray.length; i++) {
                 var tr = circulation[i];
@@ -679,7 +875,7 @@ var THSPageStock = {
                 var c5 = $(tdArr[4]).text();///解禁股占总股本比例
                 var c6 = $(tdArr[5]).text();///解禁股份类型
                 var c7 = $(tdArr[6]).text();///是否实际值
-
+                 
                 var item = {
                     C1: c1,
                     C2: c2,
@@ -701,8 +897,8 @@ var THSPageStock = {
             var item = {
                 Total: -1,///总股本(股)
                 ATotal: -1,///A股总股本(股)
-                Circulating: -1,///流通A股(股)
-                Restricted: -1,///限售A股(股)
+                Circulating : -1,///流通A股(股)
+                Restricted : -1,///限售A股(股)
                 Reason: -1,///变动原因
             }
             capit.push(item);
@@ -769,7 +965,7 @@ var THSPageStock = {
     },
 
     ///分析主力持仓数据
-    AnalysePagePosition: function (dbItem) {
+    AnalysePagePosition: function (pageData) {
         var $page = $(pageData.Page);
         var position = {};
 
@@ -790,7 +986,7 @@ var THSPageStock = {
 
             organhold.push(item);
         }
-
+         
 
         for (var i = 0; i < organholdTrArray.length; i++) {
             var tr = organholdTrArray[i];
@@ -817,18 +1013,18 @@ var THSPageStock = {
                     organhold[4].Share = TOOLS.STR.ToNumber(c6);
                 }
                 else if ("累计市值(元)" === c1) {
-                    organhold[0].MarketValue = TOOLS.STR.ToNumber(c2);
-                    organhold[1].MarketValue = TOOLS.STR.ToNumber(c3);
+                    organhold[0].MarketValue = TOOLS.STR.ToNumber( c2);
+                    organhold[1].MarketValue = TOOLS.STR.ToNumber( c3);
                     organhold[2].MarketValue = TOOLS.STR.ToNumber(c4);
                     organhold[3].MarketValue = TOOLS.STR.ToNumber(c5);
                     organhold[4].MarketValue = TOOLS.STR.ToNumber(c6);
                 }
                 else if ("持仓比例" === c1) {
                     organhold[0].Ratio = TOOLS.STR.ToNumber(c2);
-                    organhold[1].Ratio = TOOLS.STR.ToNumber(c3);
-                    organhold[2].Ratio = TOOLS.STR.ToNumber(c4);
-                    organhold[3].Ratio = TOOLS.STR.ToNumber(c5);
-                    organhold[4].Ratio = TOOLS.STR.ToNumber(c6);
+                    organhold[1].Ratio = TOOLS.STR.ToNumber( c3);
+                    organhold[2].Ratio = TOOLS.STR.ToNumber( c4);
+                    organhold[3].Ratio = TOOLS.STR.ToNumber( c5);
+                    organhold[4].Ratio = TOOLS.STR.ToNumber( c6);
                 }
                 else if ("较上期变化(股)" === c1) {
                     organhold[0].Change = c2;
@@ -863,7 +1059,7 @@ var THSPageStock = {
                         C1: c1,
                         C2: c2,
                         C3: TOOLS.STR.ToNumber(c3),
-                        C4: TOOLS.STR.ToNumber(c4),
+                        C4:  TOOLS.STR.ToNumber(c4),
                         C5: TOOLS.STR.ToNumber(c5),
                         C6: c6,
                     };
@@ -871,7 +1067,7 @@ var THSPageStock = {
                 }
             }
         }
-
+ 
         ///IPO获配机构
         var ipoallotTrArray = $page.find("#ipoallot tbody  tr"); ///近期重要事件  
         var ipoallot = [];
@@ -906,7 +1102,7 @@ var THSPageStock = {
     },
 
     ///分析公司大事数据
-    AnalysePageEvent: function (dbItem) {
+    AnalysePageEvent: function (pageData) {
         var $page = $(pageData.Page);
         var event = {};
 
@@ -924,8 +1120,8 @@ var THSPageStock = {
 
 
                 var item = {
-                    C1: TOOLS.Convertor.ToDate(c1.replace('-', '/')),
-                    C2: c2.replace("：", ""),
+                    C1: TOOLS.Convertor.ToDate(c1.replace('-','/')),
+                    C2: c2.replace("：",""),
                     C3: c3,
                     C4: c4,
                 };
@@ -955,7 +1151,7 @@ var THSPageStock = {
                     C3: c3,
                     C4: Number(c4.replace(/ /g, "").replace("增持", "").replace("减持", "-").replace("万", "")),
                     C5: Number(c5),
-                    C6: Number(c6.replace("万", "")),
+                    C6: Number(c6.replace("万","")),
                     C7: c7,
                 };
                 shareholding.push(item);
@@ -1002,7 +1198,7 @@ var THSPageStock = {
     },
 
     ///分析分红融资数据
-    AnalysePageBonus: function (dbItem) {
+    AnalysePageBonus: function (pageData) {
         var $page = $(pageData.Page);
         var trArray = $page.find("#bonus_table tbody tr");
         var bonus = [];
@@ -1022,16 +1218,43 @@ var THSPageStock = {
     },
 
     ///分析价值分析数据
-    AnalysePageWorth: function (dbItem) {
+    AnalysePageWorth: function (pageData) {
 
     },
 
     ///分析行业分析数据
-    AnalysePageField: function (dbItem) {
+    AnalysePageField: function (pageData) {
 
     },
 
+    ///日线数据分析
+    AnalysePageDayLine: function (pageData) {
+        var jsonString = pageData.Page;
+        var str = jsonString.substring("quotebridge_v2_line_hs_000000_01_last(".length);
+        str = str.substring(0, str.lastIndexOf(')'));
+        var item = JSON.parse(str);
+        var dayArray = item.data.split(/;/g);
+        var lineArray = [];
+        for (var i = 0; i < dayArray.length; i++) {
+            var arr = dayArray[i].split(/,/g);
+            var dayLine = {};
+            dayLine["Date"] = parseInt(arr[0]);///日期，原始格式 20170913
+            dayLine["Opening"] = Number(arr[1]);///开盘价
+            dayLine["Max"] = Number(arr[2]);//最高价
+            dayLine["Lowest"] = Number(arr[3]);//最低价
+            dayLine["Closing"] = Number(arr[4]);//收盘价
+            dayLine["Volume"] = Number(arr[5]);//成交量
+            dayLine["Turnover"] = Number( arr[6]);//成交额
+            dayLine["Rate"] = Number(arr[7]);//换手率
+
+            lineArray.push(dayLine);
+        }
+        item.data = lineArray;
+        return item;
+    },
+
+ 
+
 }
 
-
-module.exports = THSPageStock;
+module.exports = THS;

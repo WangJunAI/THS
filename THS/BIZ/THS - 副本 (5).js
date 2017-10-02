@@ -16,7 +16,44 @@ var $ = require('cheerio');
 var count = 0;
 ///同花顺业务处理
 var THS = {
-
+    GetDB: function () {
+        var opt = MongoDB.GetEmptyOption();
+        opt.url = "mongodb://192.168.0.140:27017/ths";
+        var db = MongoDB.GetInst("ths", opt);
+        if (null === THS.DB) {
+            THS.DB = db;
+        }
+        return THS.DB;
+    },
+    Const: {
+        Collection: {
+            Tag: "0921",
+            Page: "Page" + "0921", ///原始页面,
+            PageData: "PageData" + "0921",///页面一级提取数据
+            Log: "Log" + "0921",///性能日志
+            AnalysisResult: "AnalysisResult" + "0921",
+        }
+    },
+    Log: {
+        data: {},
+        ///开始计时
+        Start: function (logItemName) {
+            return;
+            THS.Log.data[logItemName] = { StartTime: new Date(), StopTime: new Date() };
+        },
+        ///
+        Stop: function (logItemName) {
+            return;
+            THS.Log.data[logItemName].StopTime = new Date();
+            THS.Log.data[logItemName].ItemName = logItemName;
+            THS.Log.data[logItemName].Duration = THS.Log.data[logItemName].StopTime - THS.Log.data[logItemName].StartTime;
+            var collectionName = THS.Const.Collection.Log;
+            var db = THS.GetDB();
+            db.Save(collectionName, THS.Log.data[logItemName], function () {
+                delete THS.Log.data[logItemName];
+            }, 0);
+        }
+    },
     Dict: {},
     DB: null,
     QueueW: [],
@@ -148,50 +185,11 @@ var THS = {
             console.log("出错");
         });
     },
-
-    ///分页遍历个股页面
-    TraversePager_PageStock: function () {
-
-    },
-
-    ///分页遍历K线图
-    TraversePager_PageKLine: function () {
-        var db = THSDB.GetMongo01();
-        var sourceCollectionName = "Page0921";//THSDB.Mongo01Table.Page;
-        var targetCollectionName = THSDB.Mongo01Table.DataKLine;
-
-        var filter = { $or: [{ "ContentType": "日线数据" }] };
-
-        var callbackFind = function (pagerInfo) {
-            ///获取一页数据以后
-            var dataArray = pagerInfo.DataArray;
-            while (0 < dataArray.length) {
-                var qItem = dataArray.pop();
-                ///从页面获取数据
-                ///存储数据
-                var pageData = THSPageKLine.AnalysePageDayLine(qItem);
-                db.Save(targetCollectionName, item, function (err, result, remaining) {
-                    console.log(targetCollectionName + "保存完毕" + item.StockName);
-                    if (0 === remaining) {
-                        db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
-                    }
-                }, 0);
-
-            }
-        }
-
-        var callbackErr = function (err) { console.log("TraversePager " + err) };
-
-        db.TraversePager(sourceCollectionName, filter, 0, 100, callbackFind, callbackErr);
-    },
-
-
     ///大单追踪
-    TraversePager_FundsTracking: function () {
+    TraversePageFundsTracking: function () {
 
     },
 
-    ///清理垃圾数据
     ClearPageFundsTracking: function () {
         var db = THSDB.GetMongo01();
         collectionName = THSDB.Mongo01Table.PageFundsTracking;

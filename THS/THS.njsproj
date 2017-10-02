@@ -43,6 +43,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BIZ\THSPageFundsTracking.js" />
+    <Compile Include="BIZ\THSPageKLine.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="BIZ\THSPageStock.js">
       <SubType>Code</SubType>
     </Compile>
@@ -71,6 +74,9 @@
     <Compile Include="Core\DBIterator.js" />
     <Compile Include="Core\HttpService.js" />
     <Compile Include="Core\LocalService.js" />
+    <Compile Include="Core\LOG.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Core\MemQueue.js">
       <SubType>Code</SubType>
     </Compile>
