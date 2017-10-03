@@ -14,8 +14,8 @@ var ths = require("./BIZ/THS");
 //ths.TraversePage();
 //ths.TraverseData();
 //ths.ClearPageFundsTracking();
-ths.TraversePager_PageKLine();
-
+//ths.TraversePager_PageKLine();
+ths.TraversePager_PageStock();
 
 
 var wiki = require("./BIZ/WIKI");

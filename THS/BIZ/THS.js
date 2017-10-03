@@ -151,14 +151,43 @@ var THS = {
 
     ///分页遍历个股页面
     TraversePager_PageStock: function () {
+        var db = THSDB.GetMongo01();
+        var sourceCollectionName = "Page0921";//THSDB.Mongo01Table.Page;
+        var targetCollectionName = THSDB.Mongo01Table.DataStockPage;
 
+        var filter = { $or: [{ "ContentType": "资金流向" }] };
+
+        var callbackFind = function (pagerInfo) {
+            ///获取一页数据以后
+            var dataArray = pagerInfo.DataArray;
+            while (0 < dataArray.length) {
+                var qItem = dataArray.pop();
+                ///从页面获取数据
+                ///存储数据
+                var saveItem = THSPageStock.GetDataFromPage(qItem);
+                saveItem.StockCode = qItem.StockCode;
+                saveItem.StockName = qItem.StockName;
+                saveItem.ContentType = qItem.ContentType;
+                db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
+                    console.log(targetCollectionName + "保存完毕" + qItem.ContentType);
+                    if (0 === remaining) {
+                        db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
+                    }
+                }, 0);
+
+            }
+        }
+
+        var callbackErr = function (err) { console.log("TraversePager " + err) };
+
+        db.TraversePager(sourceCollectionName, filter, 0, 100, callbackFind, callbackErr);
     },
 
     ///分页遍历K线图
     TraversePager_PageKLine: function () {
         var db = THSDB.GetMongo01();
         var sourceCollectionName = "Page0921";//THSDB.Mongo01Table.Page;
-        var targetCollectionName = THSDB.Mongo01Table.DataKLine;
+        var targetCollectionName = "DataKLine0921";THSDB.Mongo01Table.DataKLine;
 
         var filter = { $or: [{ "ContentType": "日线数据" }] };
 
@@ -169,9 +198,11 @@ var THS = {
                 var qItem = dataArray.pop();
                 ///从页面获取数据
                 ///存储数据
-                var pageData = THSPageKLine.AnalysePageDayLine(qItem);
-                db.Save(targetCollectionName, item, function (err, result, remaining) {
-                    console.log(targetCollectionName + "保存完毕" + item.StockName);
+                var saveItem = THSPageKLine.AnalysePageDayLine(qItem);
+                saveItem.StockCode = qItem.StockCode;
+                saveItem.StockName = qItem.StockName;
+                db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
+                    console.log(targetCollectionName + "保存完毕" + qItem.ContentType);
                     if (0 === remaining) {
                         db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
                     }

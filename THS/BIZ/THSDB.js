@@ -20,6 +20,7 @@ var THSDB = {
             THSDB.Mongo01Table["Page"] = "Page" + tag;///页面原始数据
             THSDB.Mongo01Table["DataFundsTracking"] = "DataFundsTracking" + tag;///大单追踪原始数据
             THSDB.Mongo01Table["DataKLine"] = "DataKLine" + tag;///页面原始数据
+            THSDB.Mongo01Table["DataStockPage"] = "DataStockPage" + tag;///个股页面
         }
         return db;
     },

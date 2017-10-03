@@ -1,10 +1,19 @@
 ﻿var $ = require('cheerio');
-
+var PARAM_CHECKER = require("../Core/PARAM_CHECKER");
+var TOOLS = require("../Core/TOOLS");
 ///同花顺个股页面分析 
 var THSPageStock = {
+
     ///分析首页概览数据
     AnalysePageHome: function (dbItem) {
-        var $page = $(pageData.Page);
+
+        ///类型检查
+        if ("首页概览" != dbItem.ContentType) {
+            return;
+        }
+
+
+        var $page = $(dbItem.Page);
         var home = {};
 
         ///公司概况
@@ -286,9 +295,15 @@ var THSPageStock = {
 
         // console.log($(company_details).html()); ///这个会有编码问题
     },
+ 
     ///分析资金流向数据
     AnalysePageFunds: function (dbItem) {
-        var $page = $(pageData.Page);
+        ///类型检查
+        if ("资金流向" != dbItem.ContentType) {
+            return;
+        }
+
+        var $page = $(dbItem.Page);
         var funds = {};
         ///历史资金数据一览
         var lszjsjylTrArray = $page.find("table.m_table_3 tr");
@@ -334,7 +349,12 @@ var THSPageStock = {
 
     ///分析公司资料数据
     AnalysePageCompany: function (dbItem) {
-        var $page = $(pageData.Page);
+        ///类型检查
+        if ("公司资料" != dbItem.ContentType) {
+            return;
+        }
+
+        var $page = $(dbItem.Page);
         var Info = {};
 
         ///详细情况
@@ -437,7 +457,12 @@ var THSPageStock = {
 
     ///分析新闻公告数据 http://stockpage.10jqka.com.cn/ajax/code/002417/type/news/
     AnalysePageNews: function (dbItem) {
-        var $page = $(pageData.Page.replace("success<!-- 热点新闻模板 -->", ""));
+        ///类型检查
+        if ("新闻公告" != dbItem.ContentType) {
+            return;
+        }
+
+        var $page = $(dbItem.Page.replace("success<!-- 热点新闻模板 -->", ""));
 
         var news = {};
         ///热点新闻
@@ -465,7 +490,12 @@ var THSPageStock = {
 
     ///分析财务分析数据
     AnalysePageFinance: function (dbItem) {
-        var $page = $(pageData.Page);
+        ///类型检查
+        if ("财务分析" != dbItem.ContentType) {
+            return;
+        }
+
+        var $page = $(dbItem.Page);
         var finance = {};
 
         var indicatorTabs = $page.find("#data-info .top_thead th");///季度数
@@ -474,7 +504,12 @@ var THSPageStock = {
 
     ///分析经营分析数据
     AnalysePageOperate: function (dbItem) {
-        var $page = $(pageData.Page);
+        if ("经营分析" != dbItem.ContentType) {
+            return;
+        }
+
+
+        var $page = $(dbItem.Page);
 
         ///主营介绍
         var items1 = $page.find("#intro .main_intro_list li");
@@ -543,7 +578,11 @@ var THSPageStock = {
 
     ///分析股东股本数据
     AnalysePageHolder: function (dbItem) {
-        var $page = $(pageData.Page);
+        if ("股东股本" != dbItem.ContentType) {
+            return;
+        }
+         
+        var $page = $(dbItem.Page);
         var holder = {};
 
         ///股东人数
@@ -770,7 +809,11 @@ var THSPageStock = {
 
     ///分析主力持仓数据
     AnalysePagePosition: function (dbItem) {
-        var $page = $(pageData.Page);
+        if ("主力持仓" != dbItem.ContentType) {
+            return;
+        }
+
+        var $page = $(dbItem.Page);
         var position = {};
 
         ///机构持股汇总
@@ -907,7 +950,11 @@ var THSPageStock = {
 
     ///分析公司大事数据
     AnalysePageEvent: function (dbItem) {
-        var $page = $(pageData.Page);
+        if ("公司大事" != dbItem.ContentType) {
+            return;
+        }
+
+        var $page = $(dbItem.Page);
         var event = {};
 
         ///近期重要事件
@@ -1003,7 +1050,12 @@ var THSPageStock = {
 
     ///分析分红融资数据
     AnalysePageBonus: function (dbItem) {
-        var $page = $(pageData.Page);
+        if ("分红融资" != dbItem.ContentType) {
+            return;
+        }
+
+
+        var $page = $(dbItem.Page);
         var trArray = $page.find("#bonus_table tbody tr");
         var bonus = [];
         for (var i = 0; i < trArray.length; i++) {
@@ -1023,13 +1075,42 @@ var THSPageStock = {
 
     ///分析价值分析数据
     AnalysePageWorth: function (dbItem) {
-
+        if ("价值分析" != dbItem.ContentType) {
+            return;
+        }
     },
 
     ///分析行业分析数据
     AnalysePageField: function (dbItem) {
-
+        if ("行业分析" != dbItem.ContentType) {
+            return;
+        }
     },
+
+    GetDataFromPage: function (dbItem) {
+        var res = {};
+        res.Home = THSPageStock.AnalysePageHome(dbItem); //获取首页概览数据
+        res.Funds = THSPageStock.AnalysePageFunds(dbItem); //获取首页概览数据
+        res.Company = THSPageStock.AnalysePageCompany(dbItem); //获取公司资料数据
+        res.News = THSPageStock.AnalysePageNews(dbItem); //获取新闻公告数据
+        res.Finance = THSPageStock.AnalysePageFinance(dbItem); //获取财务分析数据
+        res.Operate = THSPageStock.AnalysePageOperate(dbItem); //获取经营分析数据
+        res.Holder = THSPageStock.AnalysePageHolder(dbItem); //获取股东股本数据
+        res.Position = THSPageStock.AnalysePagePosition(dbItem); //获取主力持仓数据
+        res.Event = THSPageStock.AnalysePageEvent(dbItem); //获取公司大事数据
+        res.Bonus = THSPageStock.AnalysePageBonus(dbItem); //获取分红融资数据
+        res.Worth = THSPageStock.AnalysePageWorth(dbItem); //获取价值分析数据
+        res.Field = THSPageStock.AnalysePageField(dbItem); //获取行业分析数据
+
+        for (var key in res) {
+            if (!PARAM_CHECKER.IsValid(res[key])) {
+                ///若属性不可用,则删除
+                delete res[key];
+            }
+        }
+
+        return res;
+    }
 
 }
 
