@@ -1108,7 +1108,7 @@ var THSPageStock = {
                 delete res[key];
             }
         }
-
+        console.log(" 正在提取数据 "+ dbItem.Page.substring(0,30)+"....");
         return res;
     }
 

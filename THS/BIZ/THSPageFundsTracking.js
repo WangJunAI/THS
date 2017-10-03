@@ -116,6 +116,7 @@ THSPageFundsTracking.GetPageData_ddzz = function (data) {
     return THSPageFundsTracking.GetPageData_ggzjl(data.Page);
 }
 
+
 THSPageFundsTracking.CheckDuplicateData = function (data) {
     var id = data._id.toString();
     var res = DataTools.CheckDuplicateData(id, "Page", data.Page);
