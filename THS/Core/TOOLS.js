@@ -79,7 +79,25 @@ var TOOLS = {
 
             return res;
         }
+    },
+    Compare: {
+        NumberCompare: function (value,lower, upper, lowerEq, upperEq) {
+            if (PARAM_CHECKER.IsNumber(value)&&PARAM_CHECKER.IsNumber(lower) && PARAM_CHECKER.IsNumber(upper) && !PARAM_CHECKER.IsNumber(lowerEq) && !PARAM_CHECKER.IsNumber(upperEq) && lower < upper) {
+                return lower < value && value < upper;
+            }
+            else if (PARAM_CHECKER.IsNumber(value) && PARAM_CHECKER.IsNumber(lower) && PARAM_CHECKER.IsNumber(upper) && !PARAM_CHECKER.IsNumber(lowerEq) && PARAM_CHECKER.IsNumber(upperEq) && lower <= upper) {
+                return lower < value && value <= upper;
+            }
+            else if (PARAM_CHECKER.IsNumber(value) && PARAM_CHECKER.IsNumber(lower) && PARAM_CHECKER.IsNumber(upper) && PARAM_CHECKER.IsNumber(lowerEq) && !PARAM_CHECKER.IsNumber(upperEq) && lower <= upper) {
+                return lower <= value && value < upper;
+            }
+            else if (PARAM_CHECKER.IsNumber(value) && PARAM_CHECKER.IsNumber(lower) && PARAM_CHECKER.IsNumber(upper) && PARAM_CHECKER.IsNumber(lowerEq) && PARAM_CHECKER.IsNumber(upperEq) && lower <= upper) {
+                return lower <= value && value <= upper;
+            }
+            throw "NumberCompare 比较方法出错 lower=" + lower + " value=" + value + " upper=" + upper + " lowerEq=" + lowerEq + " upperEq=" + upperEq;
+        }
     }
+
 }
 
 ///----方法实现-----

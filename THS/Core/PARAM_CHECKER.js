@@ -49,8 +49,19 @@ var PARAM_CHECKER = {
     },
     ///是否是整数
     IsInt: function (input) {
+        return !isNaN(parseInt(input));
+    },
+
+    ///是否是浮点数
+    IsFloat: function (input) {
+        return !isNaN(parseFloat(input));
+    },
+
+    ///是否是一个数字
+    IsNumber: function (input) {
         return !isNaN(Number(input));
     },
+
     ///是否包含指定的字符
     Contains: function (keyword,input) {
         var reg = new RegExp(keyword,"ig");

@@ -22,6 +22,9 @@ var THS_BI = {
     CalPriceTrend: function () { },///个股价格走势计算评估计算
     CalTargetStock: function () { }, ///获取今日上涨股票
     CalFunds: function () { },///计算资金流入
+    GetBroker: function () { },///获取所有券商
+
+
 
     MemData: {},///内存数据
 

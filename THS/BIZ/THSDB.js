@@ -21,6 +21,13 @@ var THSDB = {
             THSDB.Mongo01Table["DataFundsTracking"] = "DataFundsTracking" + tag;///大单追踪原始数据
             THSDB.Mongo01Table["DataKLine"] = "DataKLine" + tag;///页面原始数据
             THSDB.Mongo01Table["DataStockPage"] = "DataStockPage" + tag;///个股页面
+
+            ///个股龙虎榜
+            THSDB.Mongo01Table["PageGGLHB"] = "PageGGLHB" + tag;///个股龙虎榜页面
+            THSDB.Mongo01Table["PageGGLHBMX"] = "PageGGLHBMX" + tag;///个股龙虎榜页面
+            THSDB.Mongo01Table["DataGGLHB"] = "DataGGLHB" + tag;///个股龙虎榜页面数据
+            THSDB.Mongo01Table["DataGGLHBMX"] = "DataGGLHBMX" + tag;///个股龙虎榜页面数据
+
         }
         return db;
     },
