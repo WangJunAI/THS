@@ -150,7 +150,7 @@ var THS = {
 
     },
 
-    ///分页遍历个股龙虎榜页面
+    ///分页遍历个股龙虎榜明细页面
     TraversePager_PageGGLHBMX: function () {
         var db = THSDB.GetMongo01();
         var sourceCollectionName = "PageGGLHBMX1004";//THSDB.Mongo01Table.Page;

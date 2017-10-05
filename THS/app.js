@@ -1,4 +1,4 @@
-'use strict';
+﻿'use strict';
 //var http = require("./Core/HttpService");
 //http.Get("http://data.10jqka.com.cn/ifmarket/lhbggxq/report/2017-03-27/", "gbk", function (res) {
 //    console.log(res);
@@ -17,7 +17,15 @@ var ths = require("./BIZ/THS");
 //ths.TraversePager_PageKLine();
 //ths.TraversePager_PageStock();
 //ths.TraversePager_FundsTracking();
-ths.TraversePager_PageGGLHB();
+ths.TraversePager_PageGGLHBMX();
+
+
+var log = require("../THS/Core/LOG");
+
+ 
+
+
+
 
 var wiki = require("./BIZ/WIKI");
 //wiki.TraverseIndex();

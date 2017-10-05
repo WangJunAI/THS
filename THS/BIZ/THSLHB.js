@@ -16,20 +16,20 @@ var THSLHB = {
     GetPageData_GGLHBMX: function (dbItem) {
         var $page = $(dbItem.Page);
 
-        var tableHtml = $page.find(".m_table table");
+        var tableHtml = dbItem.Page;
         var tableData = TOOLS.HTML.TableToJson(tableHtml);
 
         var summaryText = $($page.find(".lhb-tipbox-hd-desc")).text().split(/ /g);
         var sumInfo = {};
-        for (var i = 0; i < summaryInfo.length; i++) {
-            var textItemArray = summaryInfo[i].split(/：/g);
+        for (var i = 0; i < summaryText.length; i++) {
+            var textItemArray = summaryText[i].split(/：/g);
             if (2 === textItemArray.length) {
                 sumInfo[textItemArray[0]] = textItemArray[1];
             }
         }
         var res = {
-            Summary =sumInfo,
-            Data=tableData
+            Summary:sumInfo,
+            Data:tableData
         };
 
 
