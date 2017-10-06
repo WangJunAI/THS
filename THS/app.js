@@ -11,13 +11,15 @@ res = tool.DATE.GetDateArray();
 var news = require("./BIZ/NEWS");
 //news.Load();
 var ths = require("./BIZ/THS");
-//ths.TraversePage();
-//ths.TraverseData();
-//ths.ClearPageFundsTracking();
-//ths.TraversePager_PageKLine();
-//ths.TraversePager_PageStock();
-//ths.TraversePager_FundsTracking();
-ths.TraversePager_PageGGLHBMX();
+ 
+//ths.ClearPageFundsTracking();///数据清理
+
+//ths.TraversePager_PageKLine();///日线图
+//ths.TraversePager_PageStock();///个股详情
+//ths.TraversePager_FundsTracking();///大单追踪
+///ths.TraversePager_PageGGLHB();///个股龙虎榜
+//ths.TraversePager_PageGGLHBMX();///个股龙虎榜明细
+///ths.TraversePager_PageStockFunds();///资金流
 
 
 var log = require("../THS/Core/LOG");

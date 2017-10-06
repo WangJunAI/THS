@@ -84,7 +84,7 @@ var THS = {
         db.TraversePager(sourceCollectionName, filter, 0, 100, callbackFind, callbackErr);
     },
 
-    ///分页遍历大单追踪页面数据(数据必须清洗后)
+    ///分页遍历大单追踪页面数据(数据必须清洗后)实时
     TraversePager_FundsTracking: function () {
         var db = THSDB.GetMongo01();
         var sourceCollectionName = "PageFundsTracking0929";//THSDB.Mongo01Table.Page;
@@ -182,6 +182,42 @@ var THS = {
         db.TraversePager(sourceCollectionName, filter, 0, 100, callbackFind, callbackErr);
 
     },
+
+    ///分页遍历资金流向 - 个股资金 概念资金 行业资金 即时 3日 5日 10日 20日 页面
+    TraversePager_PageStockFunds: function () {
+        var db = THSDB.GetMongo01();
+        var sourceCollectionName = "PageStockFunds1004";//THSDB.Mongo01Table.Page;
+        var targetCollectionName = "DataStockFunds1004";//THSDB.Mongo01Table.DataGGLHB;
+
+        var filter = { $or: [{ ContentType:"行业资金3日"}] };
+
+        var callbackFind = function (pagerInfo) {
+            ///获取一页数据以后
+            var dataArray = pagerInfo.DataArray;
+            while (0 < dataArray.length) {
+                var qItem = dataArray.pop();
+                ///从页面获取数据
+                ///存储数据
+                var saveItem = THSPageFundsTracking.GetPageData(qItem);
+
+                db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
+                    console.log(targetCollectionName + " 保存完毕" + qItem.ContentType + "  " + JSON.stringify(saveItem).substring(0, 60) + "...");
+                    if (0 === remaining) {
+                        db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
+                    }
+                }, 0);
+
+            }
+        }
+
+        var callbackErr = function (err) { console.log("TraversePager " + err) };
+
+        db.TraversePager(sourceCollectionName, filter, 0, 100, callbackFind, callbackErr);
+
+    },
+
+
+
 
     ///清理大单垃圾数据
     ClearPageFundsTracking: function () {

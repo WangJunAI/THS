@@ -25,7 +25,30 @@ var TOOLS = {
             for (var item in dictData) {
 
             }
+        },
+        ///百分号转换
+        PercentToNumber: function (input) {
+            return Number(input.replace("%", "")) * Number(100.0);
+        },
+
+        ///单位转换出错
+        UnitToNumber: function (input) {
+            input = input.replace("元", "").replace("股", "").replace("，", "");
+            if (PARAM_CHECKER.Contains("万", input)) {
+                var res = Number(input.replace("万", "")) * 10000;
+                return res;
+            }
+            else if (PARAM_CHECKER.Contains("亿", input)) {
+                var res = Number(input.replace("亿", "")) * 10000 * 10000;
+                return res;
+            }
+            else if(PARAM_CHECKER.IsNumber(input)){
+                return Number(input);
+            }
+            throw "单位转换出错 "+"UnitToNumber";
         }
+
+
     },
     STR: {
         LastSubString: function () { },
@@ -95,6 +118,16 @@ var TOOLS = {
                 return lower <= value && value <= upper;
             }
             throw "NumberCompare 比较方法出错 lower=" + lower + " value=" + value + " upper=" + upper + " lowerEq=" + lowerEq + " upperEq=" + upperEq;
+        }
+    },
+    JSON: {
+        ///获取属性数量
+        KeyCount: function (json) {
+            var keyCount=0
+            for (var key in json) {
+                keyCount++;
+            }
+            return keyCount;
         }
     }
 
