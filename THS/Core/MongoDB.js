@@ -69,7 +69,7 @@ var MongoDB = {
         _THIS = this;
 
         _THIS.QueneIN.push(item);
-
+        console.log("数据已添加到保存队列,当前队列长度" + _THIS.QueneIN.length);
         if (0 < _THIS.QueneIN.length && 0 == _THIS.Status) {
             _THIS._Save();
         }
@@ -520,6 +520,7 @@ var MongoDB = {
 
                 cursor.on("data", function (data) {
                     dataArray.push(data);
+                    console.log("MongoDB 正在获取 第" + dataArray.length + "个数据 " + "所在分页 " + pageIndex + " 分页大小 " + pageSize);
                 });
                  
                 cursor.on("end", function (data) {

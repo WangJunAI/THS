@@ -20,10 +20,10 @@ var THS = {
     ///分页遍历个股页面
     TraversePager_PageStock: function () {
         var db = THSDB.GetMongo01();
-        var sourceCollectionName = "Page0921";//THSDB.Mongo01Table.Page;
-        var targetCollectionName = THSDB.Mongo01Table.DataStockPage;
+        var sourceCollectionName = "Page1004";//THSDB.Mongo01Table.Page;
+        var targetCollectionName = "DataStockPage1006";//THSDB.Mongo01Table.DataStockPage;
 
-        var filter = { $or: [{ "ContentType": "资金流向" }] };
+        var filter = { $or: [{ "ContentType": "资金流向" }, { "ContentType": "首页概览" }] };
 
         var callbackFind = function (pagerInfo) {
             ///获取一页数据以后
@@ -88,7 +88,7 @@ var THS = {
     TraversePager_FundsTracking: function () {
         var db = THSDB.GetMongo01();
         var sourceCollectionName = "PageFundsTracking0929";//THSDB.Mongo01Table.Page;
-        var targetCollectionName = THSDB.Mongo01Table.DataFundsTracking;
+        var targetCollectionName = "TestDataFundsTracking1007";//THSDB.Mongo01Table.DataFundsTracking;
 
         var filter = { $or: [{ "ContentType": "资金流向大单追踪" }] };
 
@@ -102,8 +102,8 @@ var THS = {
                 var saveItem = THSPageFundsTracking.GetPageData_ddzz(qItem);
 
                 db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
-                    console.log(targetCollectionName + "保存完毕" + qItem.ContentType + "  " + JSON.stringify(saveItem).substring(0, 60) + "...");
-                    if (0 === remaining) {
+                    console.log(targetCollectionName + "保存完毕" + qItem.ContentType + "  " + pagerInfo.TotalCount + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize + " ");
+                    if (20 === remaining) {
                         db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
                     }
                 }, 0);
@@ -113,7 +113,7 @@ var THS = {
 
         var callbackErr = function (err) { console.log("TraversePager " + err) };
 
-        db.TraversePager(sourceCollectionName, filter, 0, 100, callbackFind, callbackErr);
+        db.TraversePager(sourceCollectionName, filter, 0, 1000, callbackFind, callbackErr);
 
     },
 
