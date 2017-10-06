@@ -23,6 +23,17 @@ var THSPageKLine = {
 
             lineArray.push(dayLine);
         }
+
+        item.Column = {
+            Date: "日期",
+            Opening: "开盘价",
+            Max: "最高价",
+            Lowest: "最低价",
+            Closing: "收盘价",
+            Volume: "成交量",
+            Turnover: "成交额",
+            Rate:"换手率"
+        }
         item.data = lineArray;
         return item;
     },

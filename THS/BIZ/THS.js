@@ -54,8 +54,8 @@ var THS = {
     ///分页遍历K线图页面
     TraversePager_PageKLine: function () {
         var db = THSDB.GetMongo01();
-        var sourceCollectionName = "Page0921";//THSDB.Mongo01Table.Page;
-        var targetCollectionName = "DataKLine0921"; THSDB.Mongo01Table.DataKLine;
+        var sourceCollectionName = "PageKLine1004";//THSDB.Mongo01Table.Page;
+        var targetCollectionName = "DataKLine1006"; //THSDB.Mongo01Table.DataKLine;
 
         var filter = { $or: [{ "ContentType": "日线数据" }] };
 
@@ -70,8 +70,8 @@ var THS = {
                 saveItem.StockCode = qItem.StockCode;
                 saveItem.StockName = qItem.StockName;
                 db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
-                    console.log(targetCollectionName + "保存完毕" + qItem.ContentType);
-                    if (0 === remaining) {
+                    console.log(targetCollectionName + "保存完毕" + qItem.ContentType + " " + pagerInfo.TotalCount + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize + " ");
+                    if (20 === remaining) {
                         db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
                     }
                 }, 0);

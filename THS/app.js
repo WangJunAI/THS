@@ -14,7 +14,7 @@ var ths = require("./BIZ/THS");
  
 //ths.ClearPageFundsTracking();///数据清理
 
-//ths.TraversePager_PageKLine();///日线图
+ths.TraversePager_PageKLine();///日线图
 //ths.TraversePager_PageStock();///个股详情
 //ths.TraversePager_FundsTracking();///大单追踪
 ///ths.TraversePager_PageGGLHB();///个股龙虎榜
