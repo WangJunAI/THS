@@ -11,7 +11,8 @@ var TOOLS = {
         ///获取指定日期的明天
         GetTomorrow: function (dat) { },
         ///获取指定日期的昨天
-        GetYesterday: function (dat) { }
+        GetYesterday: function (dat) { },
+         
     },
     Convertor: {
         ToDate: function (input, defaultValue) {
@@ -26,9 +27,9 @@ var TOOLS = {
 
             }
         },
-        ///百分号转换
+        ///百分号转换 5% == 0.05
         PercentToNumber: function (input) {
-            return Number(input.replace("%", "")) * Number(100.0);
+            return Number(input.replace("%", "")) / Number(100.0);///
         },
 
         ///单位转换出错
@@ -42,10 +43,16 @@ var TOOLS = {
                 var res = Number(input.replace("亿", "")) * 10000 * 10000;
                 return res;
             }
-            else if(PARAM_CHECKER.IsNumber(input)){
+            else if (PARAM_CHECKER.IsNumber(input)) {
                 return Number(input);
             }
-            throw "单位转换出错 "+"UnitToNumber";
+            throw "单位转换出错 " + "UnitToNumber";
+        },
+        DateFromISOToChina: function (date) {
+            return date.setHours(date.getHours() + 8);
+        },
+        DateFromChinaToISO: function (date) {
+            return date.setHours(date.getHours() - 8);
         }
 
 

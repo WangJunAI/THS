@@ -28,6 +28,8 @@ var THSDB = {
             THSDB.Mongo01Table["DataGGLHB"] = "DataGGLHB" + tag;///个股龙虎榜页面数据
             THSDB.Mongo01Table["DataGGLHBMX"] = "DataGGLHBMX" + tag;///个股龙虎榜页面数据
 
+            THSDB.Mongo01Table["THSBI"] = "THSBI" + tag;///个股龙虎榜页面数据
+
         }
         return db;
     },

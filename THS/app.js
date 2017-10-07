@@ -20,7 +20,8 @@ var ths = require("./BIZ/THS");
 ///ths.TraversePager_PageGGLHB();///个股龙虎榜
 //ths.TraversePager_PageGGLHBMX();///个股龙虎榜明细
 //ths.TraversePager_PageStockFunds();///资金流
-ths.TraversePager_Data();
+//ths.TraversePager_Data();
+ths.Test();
 
 
 var log = require("../THS/Core/LOG");
