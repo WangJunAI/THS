@@ -16,10 +16,11 @@ var ths = require("./BIZ/THS");
 
 //ths.TraversePager_PageKLine();///日线图
 //ths.TraversePager_PageStock();///个股详情
-ths.TraversePager_FundsTracking();///大单追踪
+//ths.TraversePager_FundsTracking();///大单追踪
 ///ths.TraversePager_PageGGLHB();///个股龙虎榜
 //ths.TraversePager_PageGGLHBMX();///个股龙虎榜明细
-///ths.TraversePager_PageStockFunds();///资金流
+//ths.TraversePager_PageStockFunds();///资金流
+ths.TraversePager_Data();
 
 
 var log = require("../THS/Core/LOG");
@@ -29,7 +30,7 @@ var log = require("../THS/Core/LOG");
 
 
 
-var wiki = require("./BIZ/WIKI");
+//var wiki = require("./BIZ/WIKI");
 //wiki.TraverseIndex();
 
  

@@ -520,25 +520,28 @@ var MongoDB = {
 
                 cursor.on("data", function (data) {
                     dataArray.push(data);
-                    console.log("MongoDB 正在获取 " + collectionName+" 第" + dataArray.length + "个数据 " + "所在分页 " + pageIndex + " 分页大小 " + pageSize);
+                    console.log("MongoDB 正在获取 第" + dataArray.length + "个数据 " + "所在分页 " + pageIndex + " 分页大小 " + pageSize);
                 });
                  
                 cursor.on("end", function (data) {
                     if (PARAM_CHECKER.IsFunction(callbackEnd)) {
                         // Assuming DB has an open connection...
-                        summaryInfo.TotalCount = "暂空";
-                        summaryInfo.CurrentIndex = pageIndex;
-                        summaryInfo.NextIndex = (pageIndex + 1);
-                        summaryInfo.PageSize = pageSize;
-                        summaryInfo.IsLastPage = dataArray.length < pageSize;///不满一页
-                        summaryInfo.DataArray = dataArray;
-                        summaryInfo.CollectionName = collectionName;
-                        summaryInfo.Filter = jsonData;
-
-                        if (null != db) {
-                            db.close();
-                        }
-                        callbackEnd(summaryInfo);
+                        db.collection(collectionName, function (err, collection) {
+                            collection.count(function (err, count) {
+                                // Assuming no errors, 'count' should have your answer
+                                summaryInfo.TotalCount = count;
+                                summaryInfo.CurrentIndex =pageIndex;
+                                summaryInfo.NextIndex = (pageIndex+1);
+                                summaryInfo.PageSize = pageSize;
+                                summaryInfo.IsLastPage = pageIndex * pageSize < summaryInfo.TotalCount && summaryInfo.TotalCount <= (pageIndex + 1) * pageSize;
+                                summaryInfo.DataArray = dataArray;
+                                //summaryInfo.NextFunc = 
+                                if (null != db) {
+                                    db.close();
+                                }
+                                callbackEnd( summaryInfo);
+                            });
+                        });
                     }
                 });
             }

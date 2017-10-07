@@ -71,7 +71,7 @@ var THS = {
                 saveItem.StockName = qItem.StockName;
                 db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
                     console.log(targetCollectionName + "保存完毕" + qItem.ContentType + " " + pagerInfo.TotalCount + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize + " ");
-                    if (20 === remaining) {
+                    if (0 === remaining) {
                         db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
                     }
                 }, 0);
@@ -103,7 +103,7 @@ var THS = {
 
                 db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
                     console.log(targetCollectionName + "保存完毕" + qItem.ContentType + "  " + pagerInfo.TotalCount + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize + " ");
-                    if (20 === remaining) {
+                    if (0 === remaining) {
                         db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
                     }
                 }, 0);
@@ -121,9 +121,9 @@ var THS = {
     TraversePager_PageGGLHB: function () {
         var db = THSDB.GetMongo01();
         var sourceCollectionName = "PageGGLHB1004";//THSDB.Mongo01Table.Page;
-        var targetCollectionName = "DataGGLHB1004";//THSDB.Mongo01Table.DataGGLHB;
+        var targetCollectionName = "DataGGLHB1006";//THSDB.Mongo01Table.DataGGLHB;
 
-        var filter = { $or: [{ }] };
+        var filter = {};//{ $or: [{}] };
 
         var callbackFind = function (pagerInfo) {
             ///获取一页数据以后
@@ -133,9 +133,12 @@ var THS = {
                 ///从页面获取数据
                 ///存储数据
                 var saveItem = THSLHB.GetPageData_GGLHB(qItem);
+                saveItem.StockCode = qItem.StockCode;
+                saveItem.StockName = qItem.StockName;
+                saveItem.Url = qItem.Url;
 
                 db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
-                    console.log(targetCollectionName + " 保存完毕" + qItem.ContentType + "  " + JSON.stringify(saveItem).substring(0, 60) + "...");
+                    console.log(targetCollectionName + " 保存完毕" + qItem.ContentType + "  " + pagerInfo.TotalCount + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize + " ");
                     if (0 === remaining) {
                         db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
                     }
@@ -154,9 +157,9 @@ var THS = {
     TraversePager_PageGGLHBMX: function () {
         var db = THSDB.GetMongo01();
         var sourceCollectionName = "PageGGLHBMX1004";//THSDB.Mongo01Table.Page;
-        var targetCollectionName = "DataGGLHBMX1004";//THSDB.Mongo01Table.DataGGLHB;
+        var targetCollectionName = "DataGGLHBMX1006";//THSDB.Mongo01Table.DataGGLHB;
 
-        var filter = { $or: [{}] };
+        var filter = {};//{ $or: [{}] };
 
         var callbackFind = function (pagerInfo) {
             ///获取一页数据以后
@@ -166,9 +169,15 @@ var THS = {
                 ///从页面获取数据
                 ///存储数据
                 var saveItem = THSLHB.GetPageData_GGLHBMX(qItem);
+                saveItem.StockCode = qItem.Code;
+                saveItem.ParentUrl = qItem.ParentUrl;
+                saveItem.Date = TOOLS.Convertor.ToDate(qItem.Date);
+                saveItem.Rid = qItem.Rid;
+                saveItem.Url = qItem.Url;
+
 
                 db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
-                    console.log(targetCollectionName + " 保存完毕" + qItem.ContentType + "  " + JSON.stringify(saveItem).substring(0, 60) + "...");
+                    console.log(targetCollectionName + " 保存完毕" + qItem.ContentType + "  " + pagerInfo.TotalCount + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize + " ");
                     if (0 === remaining) {
                         db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
                     }
@@ -187,9 +196,9 @@ var THS = {
     TraversePager_PageStockFunds: function () {
         var db = THSDB.GetMongo01();
         var sourceCollectionName = "PageStockFunds1004";//THSDB.Mongo01Table.Page;
-        var targetCollectionName = "DataStockFunds1004";//THSDB.Mongo01Table.DataGGLHB;
+        var targetCollectionName = "DataStockFunds1006";//THSDB.Mongo01Table.DataGGLHB;
 
-        var filter = { $or: [{ ContentType:"行业资金3日"}] };
+        var filter = {};//{ $or: [/*{ ContentType:"行业资金3日"}*/] };
 
         var callbackFind = function (pagerInfo) {
             ///获取一页数据以后
@@ -201,7 +210,7 @@ var THS = {
                 var saveItem = THSPageFundsTracking.GetPageData(qItem);
 
                 db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
-                    console.log(targetCollectionName + " 保存完毕" + qItem.ContentType + "  " + JSON.stringify(saveItem).substring(0, 60) + "...");
+                    console.log(targetCollectionName + " 保存完毕" + qItem.ContentType + "  " + pagerInfo.TotalCount + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize + " ");
                     if (0 === remaining) {
                         db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
                     }
@@ -213,6 +222,40 @@ var THS = {
         var callbackErr = function (err) { console.log("TraversePager " + err) };
 
         db.TraversePager(sourceCollectionName, filter, 0, 100, callbackFind, callbackErr);
+
+    },
+
+    ///数据遍历
+    TraversePager_Data: function () {
+        var db = THSDB.GetMongo01();
+        var sourceArray = [{ CollectionName: "DataFundsTracking1006", Filter: {} } , { CollectionName: "DataGGLHB1006", Filter: {} }, { CollectionName: "DataGGLHBMX1006", Filter: {} }, 
+            { CollectionName: "DataKLine1006", Filter: {} }, { CollectionName: "DataStockFunds1006", Filter: {} }, { CollectionName: "DataStockPage1006", Filter: {} }];
+         
+        var callbackFind = function (pagerInfo) {
+            ///获取一页数据以后
+            var dataArray = pagerInfo.DataArray;
+            while (0 < dataArray.length) {
+                var qItem = dataArray.pop();
+                ///将数据放入内存数据
+                
+            }
+            console.log("准备处理 " + pagerInfo.CollectionName + "  " + pagerInfo.TotalCount + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize + " " + pagerInfo.IsLastPage+" ");
+            if (false === pagerInfo.IsLastPage) {///若不是最后一页
+                db.TraversePager(pagerInfo.CollectionName, pagerInfo.Filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
+            }
+            else if (0<sourceArray.length){
+                
+                var sourceItem = sourceArray.pop();
+                db.TraversePager(sourceItem.CollectionName, sourceItem.Filter, 0, 100, callbackFind, callbackErr);
+            }
+        }
+
+        var callbackErr = function (err) { console.log("TraversePager " + err) };
+
+        var sourceItem = sourceArray.pop();
+ 
+        db.TraversePager(sourceItem.CollectionName, sourceItem.Filter, 0, 100, callbackFind, callbackErr);
+ 
 
     },
 
