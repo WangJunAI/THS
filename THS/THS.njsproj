@@ -39,9 +39,6 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BIZ\THSDB.js" />
-    <Compile Include="BIZ\THSHistoryTest.js">
-      <SubType>Code</SubType>
-    </Compile>
     <Compile Include="BIZ\THSLHB.js">
       <SubType>Code</SubType>
     </Compile>
@@ -86,9 +83,15 @@
     <Compile Include="Core\ModuleLoader.js" />
     <Compile Include="Core\MongoDB - 副本.js" />
     <Compile Include="Core\MongoDB.js" />
+    <Compile Include="Core\MongoDBV2.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Core\MySQL.js" />
     <Compile Include="Core\PARAM_CHECKER.js" />
     <Compile Include="Core\TOOLS.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Core\WJMutilTask.js">
       <SubType>Code</SubType>
     </Compile>
     <Content Include="package.json" />
