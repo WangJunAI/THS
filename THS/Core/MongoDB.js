@@ -1,6 +1,7 @@
 ﻿var SYS = require('./CONST.js')
 var PARAM_CHECKER = require("./PARAM_CHECKER.js");
 var mongo = require('mongodb');
+var fs = require('fs');
 ///MongoDB数据库操作器
 var MongoDB = {
     _url: "mongodb://192.168.0.130:27017/WYGeQu",
@@ -119,26 +120,37 @@ var MongoDB = {
                     else if (!PARAM_CHECKER.IsValid(jsonData._id) || PARAM_CHECKER.IsEmptyString(jsonData._id)) {
                         jsonData._id = mongo.ObjectID.createPk();
                     }
-                    
-                    db.collection(collectionName).findOneAndUpdate({ _id: jsonData._id }, { $set: jsonData }, { upsert: true }, function (saveErr, result) {
-                        db.close(); 
+                    var objectLength = JSON.stringify(jsonData).length;
+                    console.log("准备保存的对象的大小 " + objectLength);
+                    if (objectLength <= 1024 * 1024 * 10) {
+                        db.collection(collectionName).findOneAndUpdate({ _id: jsonData._id }, { $set: jsonData }, { upsert: true }, function (saveErr, result) {
+                            db.close();
 
-                        if (null === saveErr) {
-                            console.log("保存成功-" + _THIS.QueneIN.length + "-" + result.insertedCount + "-" + _THIS.Status);
-                        }
-                        else {
-                            _THIS.Status = 0;
-                            console.log(_THIS._url + " 保存失败- " + _THIS.QueneIN.length + " - " + JSON.stringify(saveErr));
-                            throw saveErr;
-                        }
-                        
+                            if (null === saveErr) {
+                                console.log("保存成功-" + _THIS.QueneIN.length + "-" + result.insertedCount + "-" + _THIS.Status);
+                            }
+                            else {
+                                _THIS.Status = 0;
+                                console.log(_THIS._url + " 保存失败- " + _THIS.QueneIN.length + " - " + JSON.stringify(saveErr));
+                                throw saveErr;
+                            }
+
+                            if (PARAM_CHECKER.IsFunction(callback)) {
+                                ///若是有回调
+                                callback(saveErr, result, _THIS.QueneIN.length);
+                            }
+
+                            _THIS._Save();
+                        });
+                    }
+                    else {
                         if (PARAM_CHECKER.IsFunction(callback)) {
                             ///若是有回调
-                            callback(saveErr, result, _THIS.QueneIN.length);
+                            callback("json对象太大", null, _THIS.QueneIN.length);
                         }
-                        
+                        fs.writeFile('E:\\BigJson' + new Date().getTime() + '.js', JSON.stringify(jsonData));
                         _THIS._Save();
-                    });
+                    }
                 }
                 else {
                     _THIS.Status = 0;

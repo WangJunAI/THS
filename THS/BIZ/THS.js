@@ -229,11 +229,13 @@ var THS = {
     ///数据遍历
     TraversePager_Data: function () {
         var db = THSDB.GetMongo01();
-        //var sourceArray = [{ CollectionName: "DataFundsTracking1006", Filter: {} } , { CollectionName: "DataGGLHB1006", Filter: {} }, { CollectionName: "DataGGLHBMX1006", Filter: {} }, 
-        //    { CollectionName: "DataKLine1006", Filter: {} }, { CollectionName: "DataStockFunds1006", Filter: {} }, { CollectionName: "DataStockPage1006", Filter: {} }]; ///要分析的数据集
+ 
+       // var sourceArray = [/*{ CollectionName: "DataFundsTracking1006", Filter: {} },*/ { CollectionName: "DataKLine1006", Filter: {} }, { CollectionName: "DataGGLHB1006", Filter: {} }, { CollectionName: "DataGGLHBMX1006", Filter: {} },
+       ///* { CollectionName: "DataStockFunds1006", Filter: {} },*/{ CollectionName: "DataStockPage1006", Filter: { ContentType: "资金流向" } }/*,{ CollectionName: "THSDataAnalyse4", Filter: { } }*/]; ///要分析的数据集
 
-        var sourceArray = [/*{ CollectionName: "DataFundsTracking1006", Filter: {} }, { CollectionName: "DataGGLHB1006", Filter: {} }, { CollectionName: "DataGGLHBMX1006", Filter: {} },*/
-        { CollectionName: "DataKLine1006", Filter: {} }/*, { CollectionName: "DataStockFunds1006", Filter: {} }, { CollectionName: "DataStockPage1006", Filter: {} }*/]; ///要分析的数据集
+        //var sourceArray = [{ CollectionName: "THSDataAnalyse5", Filter: { "ContentType": "上涨5%的前5日龙虎榜信息" } }]; ///要分析的数据集
+        var sourceArray = [{ CollectionName: "THSDataAnalyse5", Filter: { "ContentType": "上涨5%的个股资金流向" } }]; ///要分析的数据集,前五日资金流入情况
+
 
         var callbackFind = function (pagerInfo) {
             ///获取一页数据以后
@@ -241,8 +243,21 @@ var THS = {
             while (0 < dataArray.length) {
                 var qItem = dataArray.pop();
                 ///将数据放入内存数据
-                THSDataAnalyse.LoadDataSet(pagerInfo.CollectionName, qItem);
+                if ("DataKLine1006" === pagerInfo.CollectionName) {
+                    THSDataAnalyse.LoadDataSet(pagerInfo.CollectionName, qItem);
+                }
+                else if ("DataGGLHB1006" === pagerInfo.CollectionName || "DataStockPage1006" === pagerInfo.CollectionName) {
+                    THSDataAnalyse.LoadDataSet(pagerInfo.CollectionName, qItem, true, "StockCode");
+                }
+                else if ("DataGGLHBMX1006" === pagerInfo.CollectionName) {
+                    THSDataAnalyse.LoadDataSet(pagerInfo.CollectionName, qItem, true, ["StockCode", "Date"]);
+                } 
+                else if ("THSDataAnalyse5" === pagerInfo.CollectionName) {
+                    THSDataAnalyse.LoadDataSet(pagerInfo.CollectionName, qItem);
+                } 
             }
+
+
             console.log("准备处理 " + pagerInfo.CollectionName + "  " + pagerInfo.TotalCount + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize + " " + pagerInfo.IsLastPage+" ");
             if (false === pagerInfo.IsLastPage) {///若不是最后一页
                 db.TraversePager(pagerInfo.CollectionName, pagerInfo.Filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
@@ -254,8 +269,11 @@ var THS = {
             else if (true === pagerInfo.IsLastPage && 0 == sourceArray.length) {
                 ///若是最后一个集合的最后一个页面
                 console.log("开始数据分析");
-                THSDataAnalyse.GetTargetStockByIncrease("5%");
-                THSDataAnalyse.Save(db);
+                //THSDataAnalyse.GetTargetStockByIncrease("5%");
+                THSDataAnalyse.CalPirceTrend();
+                THSDataAnalyse.Save();
+
+
             }
         }
 
