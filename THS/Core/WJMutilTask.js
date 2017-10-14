@@ -41,6 +41,8 @@ WJMutilTask.WorkProcess = function (cmd) {
             console.log("子进程Recv " +JSON.stringify( cmd));
             cmd.Res = "正在处理";
             process.send(cmd);
+
+
             var opt = mongo.GetEmptyOption();
             opt.url = "mongodb://192.168.0.140:27017/cluster";
             var db = mongo.GetInst("ths", opt);

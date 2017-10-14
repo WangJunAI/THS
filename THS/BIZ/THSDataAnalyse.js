@@ -271,7 +271,7 @@ var THSDataAnalyse = {
             else if ("上涨5%的个股资金流向" === item.ContentType) {
                 var days = (item.ArchorDate - item.C1) / 1000 / 3600 / 24;
                 if (undefined === funds["前" + days + "日资金"]) {
-                    funds["前" + days + "日资金"] = { "资金": { "流入": 0, "流出": 0 } };
+                    funds["前" + days + "日资金"] = { "资金": { "流入": 0, "流出": 0 }, "大单占比": { "20%以上": 0, "10%到20%": 0, "10%以下": 0, "负值": 0} };
                 }
                 if (0 < item.C4) {
                     funds["前" + days + "日资金"]["资金"]["流入"] = funds["前" + days + "日资金"]["资金"]["流入"] + 1;
@@ -279,6 +279,8 @@ var THSDataAnalyse = {
                 else {
                     funds["前" + days + "日资金"]["资金"]["流出"] = funds["前" + days + "日资金"]["资金"]["流出"] + 1;
                 }
+
+
             }
 
         }

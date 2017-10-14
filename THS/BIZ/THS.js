@@ -51,6 +51,8 @@ var THS = {
         db.TraversePager(sourceCollectionName, filter, 0, 100, callbackFind, callbackErr);
     },
 
+
+
     ///分页遍历K线图页面
     TraversePager_PageKLine: function () {
         var db = THSDB.GetMongo01();

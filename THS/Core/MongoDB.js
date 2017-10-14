@@ -283,7 +283,8 @@ var MongoDB = {
     Execute: function () { 
     
     },
- 
+
+    ///查找
     Find: function (collectionName, jsonData, pageIndex, pageSize, callbackEnd, callbackError) {
         var _THIS = this;
         _THIS.TraversePager(collectionName, jsonData, pageIndex, pageSize, callbackEnd, callbackError);
@@ -334,7 +335,7 @@ var MongoDB = {
                         summaryInfo.CurrentIndex = pageIndex;
                         summaryInfo.NextIndex = (pageIndex + 1);
                         summaryInfo.PageSize = pageSize;
-                        summaryInfo.IsLastPage = dataArray.length < pageSize;///不满一页
+                        summaryInfo.IsLastPage = dataArray.length < pageSize;///获取的数据不满一页
                         summaryInfo.DataArray = dataArray;
                         summaryInfo.CollectionName = collectionName;
                         summaryInfo.Filter = jsonData;
@@ -351,6 +352,55 @@ var MongoDB = {
             }
         });
     },
+    ParamCreator: {
+
+        CreateFindProcParam: function () {
+            var param = {};
+            param.DB = "数据库对象";
+            param.CollectionName = "要处理的集合名称";
+            param.Filter = "查询过滤器";
+            param.Index = 0;
+            param.Size = 100;
+            return param;
+        }
+    },
+    ///找到后处理
+    FindProc: function (source, target,callback, needTraverse) {
+        var sourceDB = source.DB;///源数据库
+        var sourceCollectionName = source.CollectionName;
+        var sourceFilter = source.Filter;
+        var sourcePageIndex = source.Pager.Index;
+        var sourcePageSize = source.Pager.Size;
+        
+        var targetDB = target.DB;///
+        var targetCollectionName = target.CollectionName;
+        var targetFilter = target.Filter;
+
+        ///开始循环遍历
+        sourceDB.TraversePager(sourceCollectionName, sourceFilter, sourcePageIndex, sourcePageSize, callbackFind, callbackError);
+
+        ///找到后的回调
+        var callbackFind = function (pagerInfo) {
+            ///获取一页数据以后
+            var dataArray = pagerInfo.DataArray;
+            while (0 < dataArray.length) {
+                var qItem = dataArray.pop();
+                if (true === PARAM_CHECKER.IsFunction()) {
+                    callback(qItem,pagerInfo); ///业务处理
+                }
+                if (true === needTraverse) {
+                    db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
+                }
+            }
+
+        }
+
+        var callbackError = function (err) {
+            console.log("MongoDB FindProc Err " + JSON.stringify(err));
+        }
+
+    }
+
 }
 
 //导出函数*****************************//
