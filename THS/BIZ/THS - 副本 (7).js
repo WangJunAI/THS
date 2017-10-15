@@ -10,7 +10,7 @@ var THSPageStock = require("../BIZ/THSPageStock");
 var THSPageKLine = require("../BIZ/THSPageKLine");
 var THSLHB = require("../BIZ/THSLHB");
 var THSDataAnalyse = require("../BIZ/THSDataAnalyse");
-var THSPageAnalyse = require("../BIZ/THSPageAnalyse");
+
 
 var $ = require('cheerio');
  
@@ -50,7 +50,9 @@ var THS = {
 
         db.TraversePager(sourceCollectionName, filter, 0, 100, callbackFind, callbackErr);
     },
- 
+
+
+
     ///分页遍历K线图页面
     TraversePager_PageKLine: function () {
         var db = THSDB.GetMongo01();
@@ -285,27 +287,6 @@ var THS = {
         db.TraversePager(sourceItem.CollectionName, sourceItem.Filter, 0, 100, callbackFind, callbackErr);
  
 
-    },
-
-    ///页面遍历V2
-    TraversePager_Page: function () {
-        var sourceDB = THSDB.GetMongo02();
-        var targetDB = THSDB.GetMongo02();
-        var targetCollectionName = THSDB.Mongo02Table.DataGGLHB;//THSDB.Mongo02Table.DataKLine;
-
-        var sourceParam = MongoDB.ParamCreator.EmptyFindProcParam();
-        sourceParam.DB = sourceDB;
-        sourceParam.CollectionName = THSDB.Mongo02Table.PageGGLHB;//THSDB.Mongo02Table.PageKLine;
-        sourceParam.Filter = {};
-
-
-        var callback = function (dbItem, pagerInfo) {
-            var res = THSPageAnalyse.GetDataFromPage(dbItem);
-            targetDB.Save(targetCollectionName, res, function (err,res,remaining) {
-                console.log("存储队列剩余元素"+remaining);
-            }, 0)
-        }
-        sourceDB.FindProc(sourceParam,callback,true);
     },
 
     Test: function () {

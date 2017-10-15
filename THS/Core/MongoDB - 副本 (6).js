@@ -94,7 +94,10 @@ var MongoDB = {
                     var callback = queueItem.callback;
                     var retryCount = queueItem.retryCount;
                     
- 
+                    //if (PARAM_CHECKER.IsValid(jsonData._sourceDataId)) {
+                    //    console.log("正处理 "+ jsonData._sourceDataId+"  日志深度"+ _THIS.QueueLog.length);
+                    //}
+
                     if (!PARAM_CHECKER.IsValid(jsonData.CreateTime)) {
                         ///设置创建时间
                         jsonData.CreateTime = new Date();
@@ -119,7 +122,7 @@ var MongoDB = {
                     }
                     var objectLength = JSON.stringify(jsonData).length;
                     console.log("准备保存的对象的大小 " + objectLength);
-                    if (objectLength <= 1024 * 1024 * 10) {///效益10M
+                    if (objectLength <= 1024 * 1024 * 10) {
                         db.collection(collectionName).findOneAndUpdate({ _id: jsonData._id }, { $set: jsonData }, { upsert: true }, function (saveErr, result) {
                             db.close();
 
@@ -356,48 +359,45 @@ var MongoDB = {
             param.DB = "数据库对象";
             param.CollectionName = "要处理的集合名称";
             param.Filter = "查询过滤器";
-            param.Pager = {};
-            param.Pager.Index = 0;
-            param.Pager.Size = 100;
+            param.Index = 0;
+            param.Size = 100;
             return param;
         }
     },
     ///找到后处理
-    FindProc: function (source,callback, needTraverse) {
+    FindProc: function (source, target,callback, needTraverse) {
         var sourceDB = source.DB;///源数据库
         var sourceCollectionName = source.CollectionName;
         var sourceFilter = source.Filter;
         var sourcePageIndex = source.Pager.Index;
         var sourcePageSize = source.Pager.Size;
+        
+        var targetDB = target.DB;///
+        var targetCollectionName = target.CollectionName;
+        var targetFilter = target.Filter;
 
-        var callbackError = function (err) {
-            console.log("MongoDB FindProc Err " + JSON.stringify(err));
-        }
+        ///开始循环遍历
+        sourceDB.TraversePager(sourceCollectionName, sourceFilter, sourcePageIndex, sourcePageSize, callbackFind, callbackError);
+
         ///找到后的回调
         var callbackFind = function (pagerInfo) {
             ///获取一页数据以后
             var dataArray = pagerInfo.DataArray;
             while (0 < dataArray.length) {
                 var qItem = dataArray.pop();
-                if (true === PARAM_CHECKER.IsFunction(callback)) {
+                if (true === PARAM_CHECKER.IsFunction()) {
                     callback(qItem,pagerInfo); ///业务处理
                 }
-            }
-            if (true === needTraverse && false === pagerInfo.IsLastPage) {
-                sourceDB.TraversePager(sourceCollectionName, sourceFilter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackError);
-            }
-            else {
-                console.log(sourceCollectionName+" 遍历全部完毕");
+                if (true === needTraverse) {
+                    db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
+                }
             }
 
         }
 
-
-
-        ///开始循环遍历
-        sourceDB.TraversePager(sourceCollectionName, sourceFilter, sourcePageIndex, sourcePageSize, callbackFind, callbackError);
-
-
+        var callbackError = function (err) {
+            console.log("MongoDB FindProc Err " + JSON.stringify(err));
+        }
 
     }
 

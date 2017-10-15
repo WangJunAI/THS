@@ -5,6 +5,7 @@ var PARAM_CHECKER = require("../Core/PARAM_CHECKER")
 var THSDB = {
     Mongo01: null,
     Mongo01Table: null,
+    Mongo02Table: null,
     Mongo02: null,
     MSSQL: null,
 
@@ -29,6 +30,27 @@ var THSDB = {
             THSDB.Mongo01Table["DataGGLHBMX"] = "DataGGLHBMX" + tag;///个股龙虎榜页面数据
 
             THSDB.Mongo01Table["THSBI"] = "THSBI" + tag;///个股龙虎榜页面数据
+
+        }
+        return db;
+    },
+
+    ///第二版龙虎榜数据库
+    GetMongo02: function () {
+        if (null == THSDB.Mongo02) {
+            var opt = MongoDB.GetEmptyOption();
+            opt.url = "mongodb://192.168.0.140:27017/THSV2";
+            var db = MongoDB.GetInst("THSV2", opt);
+            THSDB.Mongo02Table = {};
+            THSDB.Mongo02Table["PageFundsStock"] = "PageFundsStock";///个股资金榜单
+            THSDB.Mongo02Table["PageGGLHB"] = "PageGGLHB";///龙虎榜页面
+            THSDB.Mongo02Table["PageKLine"] = "PageKLine";///日线图页面
+            THSDB.Mongo02Table["PageStock"] = "PageStock";///个股页面
+
+            THSDB.Mongo02Table["DataFundsStock"] = "DataFundsStock";///个股资金榜单
+            THSDB.Mongo02Table["DataGGLHB"] = "DataGGLHB";///龙虎榜页面
+            THSDB.Mongo02Table["DataKLine"] = "DataKLine";///日线图页面
+            THSDB.Mongo02Table["DataStock"] = "DataStock";///个股页面
 
         }
         return db;

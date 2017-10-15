@@ -22,7 +22,7 @@ var ths = require("./BIZ/THS");
 //ths.TraversePager_PageStockFunds();///资金流
 //ths.TraversePager_Data();
 //ths.Test();
-
+ths.TraversePager_Page();
 
 
 var log = require("../THS/Core/LOG");
@@ -32,7 +32,7 @@ var wj = require("../THS/Core/WJMutilTask");
 //wj.Test();
 
 var lhbMonitor = require("../THS/BIZ/THSMonitor");
-lhbMonitor.WatchingLHB();
+//lhbMonitor.WatchingLHB();
 
 
 //var wiki = require("./BIZ/WIKI");

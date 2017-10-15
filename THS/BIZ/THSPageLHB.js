@@ -2,7 +2,7 @@
 var TOOLS = require("../Core/TOOLS");
 var PARAM_CHECKER = require("../Core/PARAM_CHECKER");
 ///同花顺龙虎榜页面分析
-var THSLHB = {
+var THSPageLHB = {
 
     ///从页面获取个股龙虎榜数据
     GetPageData_GGLHB: function (dbItem) {
@@ -70,7 +70,8 @@ var THSLHB = {
 
         var res = {
             Summary:sumInfo,
-            Data:tableData
+            Column: tableData.Column,
+            Rows:tableData.Data
         };
 
 
@@ -82,13 +83,13 @@ var THSLHB = {
     GetDataFromPage: function (dbItem) {
         var res = {};
         if ("个股龙虎榜" === dbItem.ContentType) {
-            res = THSLHB.GetPageData_GGLHB();
+            res = THSPageLHB.GetPageData_GGLHB(dbItem);
         }
         else if ("个股龙虎榜明细" === dbItem.ContentType) {
-            res = THSLHB.GetPageData_GGLHBMX();
+            res = THSPageLHB.GetPageData_GGLHBMX(dbItem);
         }
         return res;
     }
 }
 
-module.exports = THSLHB;
+module.exports = THSPageLHB;
