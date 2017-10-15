@@ -87,14 +87,14 @@ var TOOLS = {
         }
     },
     HTML: {
-        TableToJson: function (tableHtml) {
+        TableToJson: function (tableHtml,callback) {
             var $page = $(tableHtml);
             var theadTdArray = $page.find("thead th");
             var tbodyTrArray = $page.find("tbody tr");
             var res = { Column: {}, Data: [] };
             for (var i = 0; i < theadTdArray.length; i++) {
                 var $td = $(theadTdArray[i]);
-                res.Column["C" + (1 + i)] = $td.text();
+                res.Column["C" + (1 + i)] = $td.text().trim();
             }
 
             for (var i = 0; i < tbodyTrArray.length; i++) {
@@ -102,7 +102,15 @@ var TOOLS = {
                 var item = {};
                 for (var j = 0; j < tdArray.length; j++) {
                     var $td = $(tdArray[j]);
-                    item["C" + (j + 1)] = $td.text();
+                    if (PARAM_CHECKER.IsFunction(callback)) {
+                        item["C" + (j + 1)] = callback({ Tag: "tbody", Row: i, Column: j }, $td, "在tbody 第" + i + "行 第" + j + "列");
+                    }
+                    else if (PARAM_CHECKER.IsObject(callback) && PARAM_CHECKER.IsFunction(callback["第" + (j + 1) + "列"])) {
+                        item["C" + (j + 1)] = callback["第"+(j+1)+"列"]({ Tag: "tbody", Row: i, Column: j }, $td, "在tbody 第" + i + "行 第" + j + "列");
+                    }
+                    else {
+                        item["C" + (j + 1)] = $td.text();
+                    }
                 }
                 res.Data.push(item);
             }

@@ -29,7 +29,10 @@ var log = require("../THS/Core/LOG");
 
 var wj = require("../THS/Core/WJMutilTask"); 
 
-wj.Test();
+//wj.Test();
+
+var lhbMonitor = require("../THS/BIZ/THSMonitor");
+lhbMonitor.WatchingLHB();
 
 
 //var wiki = require("./BIZ/WIKI");

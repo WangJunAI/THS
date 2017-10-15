@@ -1,4 +1,5 @@
-﻿///Http协议
+﻿var URL = require("url");
+///Http协议
 var HTTP = {
     http: require("http"),
     iconv: require('iconv-lite'),
@@ -6,8 +7,8 @@ var HTTP = {
     bufferHelper: require('bufferhelper'), ///缓存器
     QueueIN: [],
     Status: 0,
-    Get: function (url, encoding, callback) {
-        HTTP.QueueIN.push({ url: url, encoding: encoding, callback: callback });
+    Get: function (url, encoding, callback,option) {
+        HTTP.QueueIN.push({ url: url, encoding: encoding, callback: callback,option:option });
         if (HTTP.QueueIN.length<=100 && 0 == HTTP.Status) {
             HTTP._Get();
         }
@@ -19,12 +20,19 @@ var HTTP = {
             var url = queueItem.url;
             var encoding = queueItem.encoding;
             var callback = queueItem.callback;
+            var option = queueItem.option;
 
             var checker = HTTP.checker;
             encoding = (checker.IsValid(encoding))?encoding:"utf8";
             var buffer = new HTTP.bufferHelper();
             HTTP.Status = 1;
-            HTTP.http.get(url, function (res) {
+            var uri = URL.parse(url);
+            option.protocol = uri.protocol;
+            option.host = uri.host;
+            option.hostname = uri.hostname;
+            option.path = uri.path;
+
+            HTTP.http.get(option, function (res) {
                 //console.log("statusCode: ", res.statusCode);
                 if (res.statusCode == 200) {
                     res.on('data', function (d) {
@@ -49,7 +57,7 @@ var HTTP = {
                 HTTP.QueueIN.push(queueItem);
                 HTTP._Get();
                 //callback(err);
-                console.err("err");
+                console.err("err " + JSON.stringify(e));
                 
             });
         }
