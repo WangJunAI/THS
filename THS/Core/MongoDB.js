@@ -380,14 +380,15 @@ var MongoDB = {
             while (0 < dataArray.length) {
                 var qItem = dataArray.pop();
                 if (true === PARAM_CHECKER.IsFunction(callback)) {
-                    callback(qItem,pagerInfo); ///业务处理
+                    var isLastItem = (0 === dataArray.length);///判断是否是最后一个元素
+                    callback(qItem,pagerInfo,isLastItem); ///业务处理
                 }
             }
             if (true === needTraverse && false === pagerInfo.IsLastPage) {
                 sourceDB.TraversePager(sourceCollectionName, sourceFilter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackError);
             }
             else {
-                console.log(sourceCollectionName+" 遍历全部完毕");
+                console.log("FindProc "+sourceCollectionName+" 遍历全部完毕");
             }
 
         }

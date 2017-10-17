@@ -307,7 +307,7 @@ var THSPageStock = {
         var funds = {};
         ///历史资金数据一览
         var lszjsjylTrArray = $page.find("table.m_table_3 tr");
-        var fundsHistoryList = [];
+        var rows = [];
         ///表格行的第一,第二行是表头说明
         for (var i = 2; i < lszjsjylTrArray.length; i++) {
             var tdArray = $(lszjsjylTrArray[i]).children();
@@ -335,11 +335,11 @@ var THSPageStock = {
                 C10: Number(c10),
                 C11: Number(c11.replace("%", "")),
             };
-            fundsHistoryList.push(dataRow);
+            rows.push(dataRow);
         }
         ///数据组装
         funds.Column = { C1: "日期", C2: "收盘价", C3: "涨跌幅", C4: "资金净流入", C5: "5日主力净额", C6: "大单(主力) - 净额", C7: "大单(主力) - 净占比", C8: "中单 - 净额", C9: "中单 - 净占比", C10: "小单 - 净额", C11: "小单 - 净占比" };
-        funds.List = fundsHistoryList;
+        funds.Rows = rows;
 
         return funds;
 
@@ -1109,6 +1109,18 @@ var THSPageStock = {
             }
         }
         console.log(" 正在提取数据 "+ dbItem.Page.substring(0,30)+"....");
+        return res;
+    },
+
+    ///从页面提取数据
+    GetDataFromPageV2: function (dbItem) {
+        var res = {};
+        if ("资金流向" === dbItem.ContentType) {
+            res = THSPageStock.AnalysePageFunds(dbItem);
+        }
+        else if ("首页概览" === dbItem.ContentType) {
+            res = THSPageStock.AnalysePageHome(dbItem);
+        }
         return res;
     }
 

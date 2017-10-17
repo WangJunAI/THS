@@ -23,9 +23,7 @@ var ths = require("./BIZ/THS");
 //ths.TraversePager_Data();
 //ths.Test();
 //ths.TraversePager_Page();
-//ths.TraversePager_DataV2();
-//ths.TraversePager_DataV3();
-//ths.TraversePager_DataV4();
+ths.TraversePager_DataV2();
 
 
 var log = require("../THS/Core/LOG");
@@ -35,8 +33,8 @@ var wj = require("../THS/Core/WJMutilTask");
 //wj.Test();
 
 var lhbMonitor = require("../THS/BIZ/THSMonitor");
-///lhbMonitor.WatchingLHB();
-ths.TraversePager_ForMonitor();
+//lhbMonitor.WatchingLHB();
+
 
 //var wiki = require("./BIZ/WIKI");
 //wiki.TraverseIndex();

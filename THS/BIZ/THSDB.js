@@ -52,6 +52,9 @@ var THSDB = {
             THSDB.Mongo02Table["DataKLine"] = "DataKLine";///日线图页面
             THSDB.Mongo02Table["DataStock"] = "DataStock";///个股页面
 
+            THSDB.Mongo02Table["DataBI"] = "DataBI";///分析结果
+            THSDB.Mongo02Table["DataInterResult"] = "DataInterResult";///分析结果
+
         }
         return db;
     },

@@ -8,9 +8,18 @@ var THSMonitor = {
     Data: {
         coreData: {
             "营业部": {
-                "国信证券股份有限公司佛山季华六路证券营业部": {}
+                "国金证券股份有限公司上海奉贤区金碧路证券营业部": {},
+                "国金证券股份有限公司上海互联网证券分公司": {},
+                "华泰证券股份有限公司上海武定路证券营业部": {},
+                "平安证券股份有限公司深圳深南东路罗湖商务中心证券营": {},
+                "国信证券股份有限公司深圳泰然九路证券营业部": {},
+                "华泰证券股份有限公司深圳益田路荣超商务中心证券营业部": {},
+                "平安证券股份有限公司深圳深南东路罗湖商务中心证券营业部": {},
+                "国泰君安证券股份有限公司成都北一环路证券营业部": {},
+                "光大证券股份有限公司佛山季华六路证券营业部": {}
             }
         },
+        Dict: {},
         ///检测是否存在于
         ExistInList: function (listName, brokerYYBName) {
             return (undefined != THSMonitor.Data.coreData[listName][brokerYYBName]);
@@ -26,10 +35,10 @@ var THSMonitor = {
     },
     ///监控龙虎榜
     WatchingLHB: function () {
-        console.log();
+        console.log("准备监控龙虎榜....");
         var watchingFunc = function () {
             console.log("正在监控龙虎榜 " + new Date());
-            var url = "http://data.10jqka.com.cn/market/longhu/";
+            var url = "http://data.10jqka.com.cn/market/longhu/";//http://data.10jqka.com.cn/ifmarket/lhbggxq/report/2017-10-17
             
             var callback = function (data) {
                 var $page = $(data);
@@ -53,10 +62,10 @@ var THSMonitor = {
                             var row = tableData.Data[k];
                             if (THSMonitor.Data.ExistInList("营业部", row.C1)) {
                                 if (0 === j) {///买入表格
-                                    console.log("找到要监控的买入金额最大的前5名营业部：" + row.C1 + " 股票代码：" + stockCode);
+                                    console.log("找到要监控的 【买入】 金额最大的前5名营业部：" + row.C1 + " 股票代码：" + stockCode+"  "+ THSMonitor.Data.Dict[stockCode]);
                                 }
                                 else if (1 === j){///卖出表格
-                                    console.log("找到要监控的卖出金额最大的前5名营业部：" + row.C1 + " 股票代码：" + stockCode);
+                                    console.log("找到要监控的 【卖出】 金额最大的前5名营业部：" + row.C1 + " 股票代码：" + stockCode + "  " + THSMonitor.Data.Dict[stockCode]);
                                 }
                             }
                             else {

@@ -35,7 +35,7 @@
     <Compile Include="BIZ\THS.js">
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="BIZ\THSDataAnalyse .js" />
+    <Compile Include="BIZ\THSDataAnalyse.js" />
     <Compile Include="BIZ\THSDataAnalyseV2.js">
       <SubType>Code</SubType>
     </Compile>

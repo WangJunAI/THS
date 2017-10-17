@@ -20,6 +20,10 @@ var TOOLS = {
             var res = new Date(Date.parse(input))
             return res;
         },
+        GetDaysInterval: function (day1, day2) {
+            var res = (day1 - day2) / 1000 / 3600 / 24;
+            return res;
+        },
         ///字典转数组
         DictToArray: function (dictData) {
             var arr = [];

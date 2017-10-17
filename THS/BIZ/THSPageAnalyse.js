@@ -1,6 +1,6 @@
 ﻿var THSPageKLine = require("../BIZ/THSPageKLine");
 var THSPageLHB = require("../BIZ/THSPageLHB");
-
+var THSPageStock = require("../BIZ/THSPageStock");
 
 ///同花顺页面分析
 var THSPageAnalyse = {
@@ -20,11 +20,19 @@ var THSPageAnalyse = {
         if ("日线数据" === dbItem.ContentType) {
             data = THSPageKLine.GetDataFromPage(dbItem);
         }
-        else if ("个股龙虎榜" === dbItem.ContentType || "个股龙虎榜明细" === dbItem.ContentType) {
+        else if ("个股龙虎榜" === dbItem.ContentType) {
+            res.RefID = dbItem.RefID;
             data = THSPageLHB.GetDataFromPage(dbItem);
         }
-        else if ("" === dbItem.ContentType) {
-
+        else if ("个股龙虎榜明细" === dbItem.ContentType) {
+            res.RefID = dbItem.RefID;
+            res.Date = dbItem.Date;
+            res.Rid = dbItem.Rid;
+            res.ParentUrl = dbItem.ParentUrl;
+            data = THSPageLHB.GetDataFromPage(dbItem);
+        }
+        else if ("资金流向" === dbItem.ContentType) {
+            data = THSPageStock.GetDataFromPageV2(dbItem);
         }
         else if ("" === dbItem.ContentType) {
 
@@ -33,6 +41,7 @@ var THSPageAnalyse = {
 
         }
 
+        ///降低维度
         for (var key in data) {
             if (undefined == res[key]) {
                 res[key] = data[key];
