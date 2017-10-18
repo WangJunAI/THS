@@ -336,24 +336,25 @@ var THS = {
         sourceDB.FindProc(sourceParam, callback, true);
     },
 
-    ///页面遍历V2 一次性计算完全部数据
+    ///页面遍历V2
     TraversePager_DataV3: function () {
- 
+        return;
         var sourceDB = THSDB.GetMongo02();
         var targetDB = THSDB.GetMongo02();
-        var targetCollectionName = THSDB.Mongo02Table.DataInterResult;
+        var targetCollectionName = THSDB.Mongo02Table.DataInterResult;//THSDB.Mongo02Table.DataStock;//THSDB.Mongo02Table.DataKLine;//THSDB.Mongo02Table.DataGGLHB;
+        //var sourceParam1 = MongoDB.ParamCreator.EmptyFindProcParam();
         var sourceArray = [];
 
-        sourceArray.push({ CollectionName: "DataKLine", Filter: { ContentType: "日线数据" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜" }, DB: sourceDB,   Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜明细" }, DB: sourceDB,  Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "资金流向" }, DB: sourceDB,  Pager: { Index: 0, Size: 100 } });
-  
+        //sourceArray.push({ CollectionName: "DataInterResult", Filter: { ContentType: "涨幅在5%以上的股票日线的前5日日线" }, DB: sourceDB, CacheName: "涨幅在5%以上的股票日线的前5日日线" , Pager:{ Index: 0, Size: 100 }});
+        //sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜" }, DB: sourceDB, CacheName: "个股龙虎榜", Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜明细" }, DB: sourceDB, CacheName: "个股龙虎榜明细", Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "资金流向" }, DB: sourceDB, CacheName: "资金流向", Pager: { Index: 0, Size: 100 } });
+        sourceArray.push({ CollectionName: "DataInterResult", Filter: {  }, DB: sourceDB, CacheName: "涨幅在5%以上的股票日线的前5日日线", Pager: { Index: 0, Size: 100 } }); ///寻找前5日规律
           
         var callback = function (dbItem, pagerInfo, isLastItem) {
-            console.log("TraversePager_DataV3 当前遍历位置 "+pagerInfo.CollectionName+" "+ pagerInfo.CurrentIndex + " " + pagerInfo.PageSize);
-            if ("DataKLine" === pagerInfo.CollectionName && "日线数据" === pagerInfo.Filter.ContentType) { 
-                THSDataAnalyseV2.LoadDataSource("日线数据", dbItem); ///加载日线数据，用于查找目标股票日K线
+            console.log("当前遍历位置 "+pagerInfo.CollectionName+" "+ pagerInfo.CurrentIndex + " " + pagerInfo.PageSize);
+            if ("DataInterResult" === pagerInfo.CollectionName && "涨幅在5%以上的股票日线的前5日日线" === pagerInfo.Filter.ContentType) { ///找这几天对应的龙虎榜信息
+                THSDataAnalyseV2.LoadDataSource("涨幅在5%以上的股票日线的前5日日线", { StockCode: dbItem.StockCode, StockName: dbItem.StockName, TradingDate: dbItem.TradingDate, RefDate: dbItem.RefDate ,Interval:dbItem.Interval}, { AsDict: true, Keys: ["StockCode", "StockName", "TradingDate"] });
             }
             else if ("DataGGLHB" === pagerInfo.CollectionName && "个股龙虎榜" === pagerInfo.Filter.ContentType) {
                 THSDataAnalyseV2.LoadDataSource("个股龙虎榜", dbItem);
@@ -364,22 +365,18 @@ var THS = {
             else if ("DataStock" === pagerInfo.CollectionName && "资金流向" === pagerInfo.Filter.ContentType) {
                 THSDataAnalyseV2.LoadDataSource("资金流向", dbItem);
             }
-  
+
+
             if (true === pagerInfo.IsLastPage && true === isLastItem) { ///若是最后一页的最后一个项目
-                if (0 < sourceArray.length) { 
-
-                    ///若没有结束 开始处理第二个集合
-                    var param2 = sourceArray.shift();
-                     
+                if (0 < sourceArray.length) {
+                    console.log("开始加载下一个结果集...");
+                    var param2 = sourceArray.pop();
                     sourceDB.FindProc(param2, callback, true);
-                    console.log("开始加载下一个结果集... " + param2.CollectionName);
-
                 }
                 else if (0 === sourceArray.length) {///若全部数据遍历完毕
                     console.log("分析及保存数据...");
                     //THSDataAnalyseV2.GetTargetStockPrev5LHB();///龙虎榜信息
                     //THSDataAnalyseV2.GetTargetStockPrev5Funds();///资金流信息
-                    THSDataAnalyseV2.DataAnalyse();
                     THSDataAnalyseV2.SaveResult(targetDB);
                     
                 }
@@ -387,7 +384,7 @@ var THS = {
         }
 
         ///开始第一个集合遍历
-        var param1 = sourceArray.shift();
+        var param1 = sourceArray.pop();
         sourceDB.FindProc(param1, callback, true);
     },
 
@@ -425,8 +422,6 @@ var THS = {
         var param1 = sourceArray.pop();
         sourceDB.FindProc(param1, callback, true);
     },
-
- 
 
     TraversePager_ForMonitor: function () {
      

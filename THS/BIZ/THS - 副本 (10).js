@@ -338,7 +338,7 @@ var THS = {
 
     ///页面遍历V2 一次性计算完全部数据
     TraversePager_DataV3: function () {
- 
+        return;
         var sourceDB = THSDB.GetMongo02();
         var targetDB = THSDB.GetMongo02();
         var targetCollectionName = THSDB.Mongo02Table.DataInterResult;

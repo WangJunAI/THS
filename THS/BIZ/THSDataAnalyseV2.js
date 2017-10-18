@@ -3,24 +3,27 @@ var PARAM_CHECKER = require("../Core/PARAM_CHECKER");
 var THSDB = require("../BIZ/THSDB");
 ///同花顺数据分析
 var THSDataAnalyseV2 = {
-    DataIN: {},
+    DataIN: {"中间结果":[]},
     DataOUT: {}
 }
 
 ///保存结果
 THSDataAnalyseV2.SaveResult = function (db) {
+
+    delete THSDataAnalyseV2.DataIN;
+
     var source = THSDataAnalyseV2.DataOUT;
     for (var key in source) {
         if (PARAM_CHECKER.IsArray(source[key])) {
             while (0 < source[key].length) {
                 var item = source[key].pop();
-                db.Save("DataInterResult3", item, function (err, res, remaining) {
+                db.Save("DataInterResult4", item, function (err, res, remaining) {
                     console.log("剩余 " + remaining);
                 }, 0);
             }
         }
         else if (PARAM_CHECKER.IsObject(source[key])) {
-            db.Save("DataInterResult3", source[key], function (err, res, remaining) {
+            db.Save("DataInterResult4", source[key], function (err, res, remaining) {
                 console.log("剩余 " + remaining);
             }, 0);
         }
@@ -74,8 +77,10 @@ THSDataAnalyseV2.CalAmplitude = function (current, prev) {
 
 ///获取目标股票日线
 THSDataAnalyseV2.GetTargetStockByIncrease = function (increase) {
+    
+
     var targetInc = TOOLS.Convertor.PercentToNumber(increase); ///目标股票涨幅
-    var source = THSDataAnalyseV2.DataIN["日K线数据"];
+    var source = THSDataAnalyseV2.DataIN["日线数据"];
     var targetStock = [];
 
     while (0 < source.length) {
@@ -96,10 +101,14 @@ THSDataAnalyseV2.GetTargetStockByIncrease = function (increase) {
                 dataItem.Amplitude = THSDataAnalyseV2.CalAmplitude(dataItem, dataArray[k - 1]);
                 targetStock.push(dataItem);
 
-                ///添加前5日K线信息
+                ///添加符合要求的前5日K线信息
                 var prev5KLineArray = THSDataAnalyseV2.GetTargetStockPrev5KLine(dataItem, dataArray);
                 for (var m = 0; m < prev5KLineArray.length; m++) {
-                    targetStock.push(prev5KLineArray[m]);
+                    //targetStock.push(prev5KLineArray[m]);
+                    if (undefined === THSDataAnalyseV2.DataIN["涨幅在5%以上的股票日线的前5日日线"]) {
+                        THSDataAnalyseV2.DataIN["涨幅在5%以上的股票日线的前5日日线"] = {};
+                    }
+                    THSDataAnalyseV2.LoadDataSource("涨幅在5%以上的股票日线的前5日日线", prev5KLineArray[m], { AsDict: true, Keys: ["StockCode","StockName","TradingDate"] });
                 }
 
                 ///添加资金流信息
@@ -110,7 +119,8 @@ THSDataAnalyseV2.GetTargetStockByIncrease = function (increase) {
     }
 
 
-    THSDataAnalyseV2.DataOUT["涨幅在" + targetInc * 100 + "%以上的股票日线"] = targetStock;
+    //THSDataAnalyseV2.DataOUT["涨幅在" + targetInc * 100 + "%以上的股票日线"] = targetStock;
+    THSDataAnalyseV2.DataIN["中间结果"] = THSDataAnalyseV2.DataIN["中间结果"].concat(targetStock);
 }
 
 ///获取目标股票前5天的K线图
@@ -148,10 +158,10 @@ THSDataAnalyseV2.GetTargetStockPrev5LHB = function () {
     var sourceLHBMX = THSDataAnalyseV2.DataIN["个股龙虎榜明细"];
     var sourceKLinePrev5 = THSDataAnalyseV2.DataIN["涨幅在5%以上的股票日线的前5日日线"];
     var result = [];
-    while (sourceLHB.length) {
-        var item = sourceLHB.pop();
-        while (item.Data.length) {
-            var itemData = item.Data.pop(); ///龙虎榜数据
+    while (0<sourceLHB.length) {
+        var item = sourceLHB.shift();
+        while (0<item.Data.length) {
+            var itemData = item.Data.shift(); ///龙虎榜数据
             var key = item.StockCode + item.StockName + itemData.C1.toString();
             console.log("正在处理 "+key);
             if (true === PARAM_CHECKER.IsObject(sourceKLinePrev5[key])) {///找日期 股票一致
@@ -170,11 +180,14 @@ THSDataAnalyseV2.GetTargetStockPrev5LHB = function () {
             }
         }
     }
-    THSDataAnalyseV2.DataOUT["涨幅在5%以上的股票日线的前5日对应的个股龙虎榜"]=result;
+
+
+    //THSDataAnalyseV2.DataOUT["涨幅在5%以上的股票日线的前5日对应的个股龙虎榜"]=result;
+    THSDataAnalyseV2.DataIN["中间结果"] = THSDataAnalyseV2.DataIN["中间结果"].concat(result);
 }
 
-
-///获取目标股票k线前5天的龙虎榜信息
+ 
+///获取目标股票k线前5天的资金流信息
 THSDataAnalyseV2.GetTargetStockPrev5Funds = function () {
     var sourceFunds = THSDataAnalyseV2.DataIN["资金流向"];
     var sourceKLinePrev5 = THSDataAnalyseV2.DataIN["涨幅在5%以上的股票日线的前5日日线"];
@@ -199,8 +212,8 @@ THSDataAnalyseV2.GetTargetStockPrev5Funds = function () {
         }
     }
 
-    THSDataAnalyseV2.DataOUT["涨幅在5%以上的股票日线的前5日对应的资金流向"] = result;
-
+    //THSDataAnalyseV2.DataOUT["涨幅在5%以上的股票日线的前5日对应的资金流向"] = result;
+    THSDataAnalyseV2.DataIN["中间结果"] = THSDataAnalyseV2.DataIN["中间结果"].concat(result);
 }
 
 ///获取最活跃的券商
@@ -240,6 +253,19 @@ THSDataAnalyseV2.GetMostActiveBroker = function (dbItem, hasFinish) {
 
 ///获取次日命中股票
 THSDataAnalyseV2.GetTargetStockNextDay = function () {
+
+}
+
+///整体数据分析
+THSDataAnalyseV2.DataAnalyse = function () {
+    THSDataAnalyseV2.GetTargetStockByIncrease("5%"); ///获取目标股票
+    ///释放缓存
+    THSDataAnalyseV2.GetTargetStockPrev5LHB();///获取目标股票前5日的龙虎榜信息
+    ///释放缓存
+    THSDataAnalyseV2.GetTargetStockPrev5Funds();///获取目标股票前5日的龙虎榜信息
+    ///释放缓存
+    THSDataAnalyseV2.GetLaw();
+
 
 }
 
