@@ -17,13 +17,13 @@ THSDataAnalyseV2.SaveResult = function (db) {
         if (PARAM_CHECKER.IsArray(source[key])) {
             while (0 < source[key].length) {
                 var item = source[key].pop();
-                db.Save("DataInterResult4", item, function (err, res, remaining) {
+                db.Save("DataResult", item, function (err, res, remaining) {
                     console.log("剩余 " + remaining);
                 }, 0);
             }
         }
         else if (PARAM_CHECKER.IsObject(source[key])) {
-            db.Save("DataInterResult4", source[key], function (err, res, remaining) {
+            db.Save("DataResult", source[key], function (err, res, remaining) {
                 console.log("剩余 " + remaining);
             }, 0);
         }
@@ -104,7 +104,7 @@ THSDataAnalyseV2.GetTargetStockByIncrease = function (increase) {
                 ///添加符合要求的前5日K线信息
                 var prev5KLineArray = THSDataAnalyseV2.GetTargetStockPrev5KLine(dataItem, dataArray);
                 for (var m = 0; m < prev5KLineArray.length; m++) {
-                    //targetStock.push(prev5KLineArray[m]);
+                    targetStock.push(prev5KLineArray[m]);
                     if (undefined === THSDataAnalyseV2.DataIN["涨幅在5%以上的股票日线的前5日日线"]) {
                         THSDataAnalyseV2.DataIN["涨幅在5%以上的股票日线的前5日日线"] = {};
                     }
@@ -138,7 +138,8 @@ THSDataAnalyseV2.GetTargetStockPrev5KLine = function (targetItem, klineArray) {
             klineArray[k].StockCode = targetItem.StockCode;
             klineArray[k].StockName = targetItem.StockName;
             klineArray[k].RefDate = day1;///目标日期
-            if(k < 0) {
+            klineArray[k].Test = 1;
+            if(0 < k) {
                 klineArray[k].Increase = THSDataAnalyseV2.CalIncrease(klineArray[k], klineArray[k - 1]);
                 klineArray[k]["涨幅"] = klineArray[k].Increase * 100 + "%";
                 klineArray[k].Amplitude = THSDataAnalyseV2.CalAmplitude(klineArray[k], klineArray[k - 1]); ///振幅
@@ -236,7 +237,6 @@ THSDataAnalyseV2.GetMostActiveBroker = function (dbItem, hasFinish) {
                 THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2]["买入"] += (0 < row.C7) ? 1 : 0;
                 THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2]["卖出"] += (row.C7 < 0) ? 1 : 0;
             }
-             
         }
     }
     else if (null === dbItem && true === hasFinish) {
@@ -249,6 +249,11 @@ THSDataAnalyseV2.GetMostActiveBroker = function (dbItem, hasFinish) {
         }
         THSDataAnalyseV2.DataOUT["营业部参与情况"] = res;
     }
+}
+
+THSDataAnalyseV2.BrokerBehaviorAnalyse = function (dbItem) {
+    ///从明细中获取营业部，获取上榜当日和第二天，第三天，第四天的走势（根据买入，卖出比例分）
+
 }
 
 ///获取次日命中股票
@@ -298,13 +303,7 @@ THSDataAnalyseV2.GetLaw = function () {
                 result1["前" + i + "天换手率5%以下"] = 0;
                 result1["前" + i + "天换手率5%到10%"] = 0;
                 result1["前" + i + "天换手率10%到20%"] = 0;
-                result1["前" + i + "天换手率20%到30%"] = 0;
-                result1["前" + i + "天换手率30%到40%"] = 0;
-                result1["前" + i + "天换手率40%到50%"] = 0;
-                result1["前" + i + "天换手率50%到60%"] = 0;
-                result1["前" + i + "天换手率60%到70%"] = 0;
-                result1["前" + i + "天换手率70%到80%"] = 0;
-                result1["前" + i + "天换手率80%以上"] = 0;
+                result1["前" + i + "天换手率20%以上"] = 0;
             }
 
             for (var i = 1; i < 6; i++) {
@@ -353,22 +352,16 @@ THSDataAnalyseV2.GetLaw = function () {
            result1["前"+item.Interval + "天涨幅8%以上"] += (0.08 < item.Increase) ? 1 : 0;
 
             ///振幅
-            //item["前" + item.Interval + "天振幅2%以下"]
-            //item["前" + item.Interval + "天振幅2%到5%"]
-            //item["前" + item.Interval + "天振幅5%到8%"]
-            //item["前" + item.Interval + "天振幅8%以上"]
+           result1["前" + item.Interval + "天振幅2%以下"] += (item.Amplitude <= 0.02) ? 1 : 0;
+           result1["前" + item.Interval + "天振幅2%到5%"] += (0.02 < item.Amplitude && item.Amplitude <= 0.05) ? 1 : 0;
+           result1["前" + item.Interval + "天振幅5%到8%"] += (0.05 < item.Amplitude && item.Amplitude <= 0.08) ? 1 : 0;
+           result1["前" + item.Interval + "天振幅8%以上"] += (0.08 < item.Amplitude) ? 1 : 0;
 
             ///换手率
-           result1["前"+item.Interval + "天换手率5%以下"] += (item.Rate <= 0.05) ? 1 : 0;
-           result1["前"+item.Interval + "天换手率5%到10%"] += (0.05 < item.Rate && item.Rate <= 0.10) ? 1 : 0;
-           result1["前" + item.Interval + "天换手率10%到20%"] += (0.10 < item.Rate && item.Rate <= 0.20) ? 1 : 0;
-           result1["前" + item.Interval + "天换手率20%到30%"] += (0.20 < item.Rate && item.Rate <= 0.30) ? 1 : 0;
-           result1["前" + item.Interval + "天换手率30%到40%"] += (0.30 < item.Rate && item.Rate <= 0.40) ? 1 : 0;
-           result1["前" + item.Interval + "天换手率40%到50%"] += (0.40 < item.Rate && item.Rate <= 0.50) ? 1 : 0;
-           result1["前" + item.Interval + "天换手率50%到60%"] += (0.50 < item.Rate && item.Rate <= 0.60) ? 1 : 0;
-           result1["前" + item.Interval + "天换手率60%到70%"] += (0.60 < item.Rate && item.Rate <= 0.70) ? 1 : 0;
-           result1["前" + item.Interval + "天换手率70%到80%"] += (0.70 < item.Rate && item.Rate <= 0.80) ? 1 : 0;
-           result1["前" + item.Interval + "天换手率80%以上"] += (0.80 < item.Rate) ? 1 : 0;
+           result1["前"+item.Interval + "天换手率5%以下"] += (item.Rate <= 5) ? 1 : 0;
+           result1["前"+item.Interval + "天换手率5%到10%"] += (5 < item.Rate && item.Rate <= 10) ? 1 : 0;
+           result1["前" + item.Interval + "天换手率10%到20%"] += (10 < item.Rate && item.Rate <= 20) ? 1 : 0;
+           result1["前" + item.Interval + "天换手率20%以上"] += (20 < item.Rate) ? 1 : 0;
 
         }
         else if ("涨幅在5%以上的股票日线的前5日对应的个股龙虎榜" === item.ContentType) {
