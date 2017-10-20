@@ -24,8 +24,13 @@ var ths = require("./BIZ/THS");
 //ths.Test();
 //ths.TraversePager_Page();
 //ths.TraversePager_DataV2();
-ths.TraversePager_DataV3();
+ths.TraversePager_Data();
 //ths.TraversePager_DataV4();
+ 
+ 
+ 
+
+
 
 
 var log = require("../THS/Core/LOG");

@@ -17,7 +17,41 @@ var $ = require('cheerio');
  
 ///同花顺业务处理
 var THS = {
+
  
+
+    ///分页遍历大单追踪页面数据(数据必须清洗后)实时
+    TraversePager_FundsTracking: function () {
+        var db = THSDB.GetMongo01();
+        var sourceCollectionName = "PageFundsTracking0929";//THSDB.Mongo01Table.Page;
+        var targetCollectionName = "TestDataFundsTracking1007";//THSDB.Mongo01Table.DataFundsTracking;
+
+        var filter = { $or: [{ "ContentType": "资金流向大单追踪" }] };
+
+        var callbackFind = function (pagerInfo) {
+            ///获取一页数据以后
+            var dataArray = pagerInfo.DataArray;
+            while (0 < dataArray.length) {
+                var qItem = dataArray.pop();
+                ///从页面获取数据
+                ///存储数据
+                var saveItem = THSPageFundsTracking.GetPageData_ddzz(qItem);
+
+                db.Save(targetCollectionName, saveItem, function (err, result, remaining) {
+                    console.log(targetCollectionName + "保存完毕" + qItem.ContentType + "  " + pagerInfo.TotalCount + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize + " ");
+                    if (0 === remaining) {
+                        db.TraversePager(sourceCollectionName, filter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackErr);
+                    }
+                }, 0);
+
+            }
+        }
+
+        var callbackErr = function (err) { console.log("TraversePager " + err) };
+
+        db.TraversePager(sourceCollectionName, filter, 0, 1000, callbackFind, callbackErr);
+
+    },
  
  
     ///页面遍历V2
@@ -44,7 +78,7 @@ var THS = {
  
 
     ///页面遍历V2 一次性计算完全部数据
-    TraversePager_Data: function () {
+    TraversePager_DataV3: function () {
  
         var sourceDB = THSDB.GetMongo02();
         var targetDB = THSDB.GetMongo02();
@@ -61,31 +95,13 @@ var THS = {
             console.log("TraversePager_DataV3 当前遍历位置 "+pagerInfo.CollectionName+" "+ pagerInfo.CurrentIndex + " " + pagerInfo.PageSize);
             if ("DataKLine" === pagerInfo.CollectionName && "日线数据" === pagerInfo.Filter.ContentType) { 
                 THSDataAnalyseV2.LoadDataSource("日线数据", dbItem); ///加载日线数据，用于查找目标股票日K线
-                ///制作日线字典
-                for (var k = 0; k < dbItem.Data.length; k++) {
-                    var dataItem = dbItem.Data[k];
-                    dataItem.Key = dbItem.StockCode + dbItem.StockName + dataItem.TradingDate.toString();
-                    THSDataAnalyseV2.LoadDataSource("日线数据字典", dataItem, { AsDict: true, Keys: "Key" });
-                }
-
+                THSDataAnalyseV2.LoadDataSource("日线数据字典", dbItem); ///加载日线数据，用于龙虎榜查找后
             }
             else if ("DataGGLHB" === pagerInfo.CollectionName && "个股龙虎榜" === pagerInfo.Filter.ContentType) {
                 THSDataAnalyseV2.LoadDataSource("个股龙虎榜", dbItem);
             }
             else if ("DataGGLHB" === pagerInfo.CollectionName && "个股龙虎榜明细" === pagerInfo.Filter.ContentType) {
-                 ///制作个股龙虎榜明细字典
-                for (var k = 0; k < dbItem.Rows.length; k++) {
-                    var rowItem = dbItem.Rows[k];
-                    if (7 === TOOLS.JSON.KeyCount(rowItem)) {
-                        rowItem.TradingDate = new Date(dbItem.Date.replace(/-/g, "/"));
-                        rowItem.StockCode = dbItem.StockCode;
-                        rowItem.StockName = dbItem.StockName;
-                        rowItem.ContentType = dbItem.ContentType;
-                        rowItem.Date = dbItem.Date;
-                        rowItem.Key = rowItem.StockCode + rowItem.StockName + rowItem.TradingDate.toString();
-                        THSDataAnalyseV2.LoadDataSource("个股龙虎榜明细", rowItem, { AsDict: true, Keys: "Key" });
-                    }
-                }
+                THSDataAnalyseV2.LoadDataSource("个股龙虎榜明细", dbItem, { AsDict: true, Keys: "RefID" });
             }
             else if ("DataStock" === pagerInfo.CollectionName && "资金流向" === pagerInfo.Filter.ContentType) {
                 THSDataAnalyseV2.LoadDataSource("资金流向", dbItem);
@@ -103,6 +119,8 @@ var THS = {
                 }
                 else if (0 === sourceArray.length) {///若全部数据遍历完毕
                     console.log("分析及保存数据...");
+                    //THSDataAnalyseV2.GetTargetStockPrev5LHB();///龙虎榜信息
+                    //THSDataAnalyseV2.GetTargetStockPrev5Funds();///资金流信息
                     THSDataAnalyseV2.DataAnalyse();
                     THSDataAnalyseV2.SaveResult(targetDB);
                     

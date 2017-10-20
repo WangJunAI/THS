@@ -83,8 +83,9 @@ THSDataAnalyseV2.GetTargetStockByIncrease = function (increase) {
     var source = THSDataAnalyseV2.DataIN["日线数据"];
     var targetStock = [];
 
-    while (0 < source.length) {
-        var sourceItem = source.pop();
+    //while (0 < source.length) {
+    for (var q = 0; q < source.length; q++) {
+        var sourceItem = source[q];
         var dataArray = sourceItem.Data;
 
         for (var k = 1; k < dataArray.length; k++) {
@@ -159,9 +160,13 @@ THSDataAnalyseV2.GetTargetStockPrev5LHB = function () {
     var sourceLHBMX = THSDataAnalyseV2.DataIN["个股龙虎榜明细"];
     var sourceKLinePrev5 = THSDataAnalyseV2.DataIN["涨幅在5%以上的股票日线的前5日日线"];
     var result = [];
-    while (0<sourceLHB.length) {
-        var item = sourceLHB.shift();
-        while (0<item.Data.length) {
+
+    //while (0 < sourceLHB.length) {
+    for (var d = 0; d < sourceLHB.length; d++) {
+        
+        var item = sourceLHB[d];
+        //while (0 < item.Data.length) {
+        for (var k = 0; k < item.Data.length; k++) {
             var itemData = item.Data.shift(); ///龙虎榜数据
             var key = item.StockCode + item.StockName + itemData.C1.toString();
             console.log("正在处理 "+key);
@@ -173,16 +178,14 @@ THSDataAnalyseV2.GetTargetStockPrev5LHB = function () {
                 itemData.RefID = item.RefID;
                 itemData.ContentType = "涨幅在5%以上的股票日线的前5日对应的个股龙虎榜";
                 result.push(itemData);
-
                 ///添加龙虎榜明细
-                var lhbmx = sourceLHBMX[item.RefID];
+                var lhbmx = sourceLHBMX[key];
                 lhbmx.ContentType = "涨幅在5%以上的股票日线的前5日对应的个股龙虎榜明细";
                 result.push(lhbmx);
             }
         }
     }
-
-
+     
     //THSDataAnalyseV2.DataOUT["涨幅在5%以上的股票日线的前5日对应的个股龙虎榜"]=result;
     THSDataAnalyseV2.DataIN["中间结果"] = THSDataAnalyseV2.DataIN["中间结果"].concat(result);
 }
@@ -194,10 +197,12 @@ THSDataAnalyseV2.GetTargetStockPrev5Funds = function () {
     var sourceKLinePrev5 = THSDataAnalyseV2.DataIN["涨幅在5%以上的股票日线的前5日日线"];
     var result = [];
 
-    while (0 < sourceFunds.length) {
-        var item = sourceFunds.pop();
-        while (0 < item.Rows.length) {
-            var row = item.Rows.pop();
+    //while (0 < sourceFunds.length) {
+    for (var k = 0; k < sourceFunds.length; k++) {
+        var item = sourceFunds[k];
+        //while (0 < item.Rows.length) {
+        for (var d = 0; d < item.Rows.length; d++) {
+            var row = item.Rows[d];
             var key = item.StockCode + item.StockName + row.C1.toString();
             console.log(" GetTargetStockPrev5Funds 正在处理 " + key);
             if (true === PARAM_CHECKER.IsObject(sourceKLinePrev5[key])) {///找日期 股票一致
@@ -209,7 +214,6 @@ THSDataAnalyseV2.GetTargetStockPrev5Funds = function () {
 
                 result.push(row);
             }
-
         }
     }
 
@@ -224,36 +228,86 @@ THSDataAnalyseV2.GetMostActiveBroker = function (dbItem, hasFinish) {
             THSDataAnalyseV2.DataOUT["营业部参与情况"] = {};
         }
 
-        for (var i = 0; i < dbItem.Rows.length; i++) {
-            var row = dbItem.Rows[i];
+        var row = dbItem;
 
-            if (undefined === THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2]) {
-                THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2] = { "营业部":row.C2,"参与": 0, "买入": 0, "卖出": 0 }
-            }
+        if (undefined === THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2]) {
+            THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2] = { "营业部": row.C2, "参与": 0, "买入": 0, "卖出": 0 }
+        }
 
 
-            if (undefined != row.C7) {
-                THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2]["参与"] += 1;
-                THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2]["买入"] += (0 < row.C7) ? 1 : 0;
-                THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2]["卖出"] += (row.C7 < 0) ? 1 : 0;
-            }
+        if (undefined != row.C7) {
+            THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2]["参与"] += 1;
+            THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2]["买入"] += (0 < row.C7) ? 1 : 0;
+            THSDataAnalyseV2.DataOUT["营业部参与情况"][row.C2]["卖出"] += (row.C7 < 0) ? 1 : 0;
         }
     }
-    else if (null === dbItem && true === hasFinish) {
-        ///字典转数组
-        var res = [];
-        for (var yybName in THSDataAnalyseV2.DataOUT["营业部参与情况"]) {
-            var arrItem = THSDataAnalyseV2.DataOUT["营业部参与情况"][yybName];
-            arrItem.ContentType = "参与的营业部";
-            res.push(arrItem);
-        }
-        THSDataAnalyseV2.DataOUT["营业部参与情况"] = res;
-    }
+
+
 }
+
+
+
 
 THSDataAnalyseV2.BrokerBehaviorAnalyse = function (dbItem) {
     ///从明细中获取营业部，获取上榜当日和第二天，第三天，第四天的走势（根据买入，卖出比例分）
+    var sourceLHBMX = THSDataAnalyseV2.DataIN["个股龙虎榜明细"];
+    var sourceKLineDict = THSDataAnalyseV2.DataIN["日线数据字典"];
+    if (undefined === THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"]) {
+        THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"] = {};
+    }
+    targetDict = THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"];
+ 
+ 
+        var row = dbItem;
+        var lhbDate = dbItem.TradingDate;///上龙虎榜的交易日
+  
+        ///找前5天K线
+        for (var d = 1; d <= 5; d++) {
+            var date = new Date(lhbDate + 1000 * d * 3600 * 24);///上龙虎榜的后1-5天
+            var key = dbItem.StockCode + dbItem.StockName + date.toString();
+            var dictItem = sourceKLineDict[key];
+            if (true === PARAM_CHECKER.IsObject(sourceKLineDict[key])) { ///找匹配的K线图
+                var item = {
+                    StockCode: dbItem.StockCode,
+                    StockName: dbItem.StockName,
+                    ContentType: "龙虎榜营业部买入或卖出后5天K线走势",
+                    Broker: row.C2,
+                    KLineDate: date,
+                    LHBDate: lhbDate,
+                    "龙虎榜净买入占比": row.C4 - row.C6,
+                    Interval: d,
+                    Increase: sourceKLineDict[key].Increase,
+                    "涨幅": "前" + d + "天涨幅" + sourceKLineDict[key].Increase
+                }
 
+                if (undefined === targetDict[row.C2]) {
+                    targetDict[row.C2] = {};
+                }
+
+                if (0 < item["龙虎榜净买入占比"]) {
+                    if (undefined === targetDict[row.C2]["买入的前" + d + "天涨幅"]) {
+                        targetDict[row.C2]["买入的前" + d + "天涨幅"] = { "2%以下": 0, "2%到5%": 0, "5%到8%": 0, "8%以上": 0 };
+                    }
+
+                    if (item.Increase <= 0.02) {
+                        targetDict[row.C2]["买入的前" + d + "天涨幅"]["2%以下"] += 1;
+                    }
+                    else if (0.02 < item.Increase && item.Increase <= 0.05) {
+                        targetDict[row.C2]["买入的前" + d + "天涨幅"]["2%到5%"] += 1;
+                    }
+                    else if (0.05 < item.Increase && item.Increase <= 0.08) {
+                        targetDict[row.C2]["买入的前" + d + "天涨幅"]["5%到8%"] += 1;
+                    }
+                    else if (0.05 < item.Increase && item.Increase <= 0.08) {
+                        targetDict[row.C2]["买入的前" + d + "天涨幅"]["8%以上"] += 1;
+                    }
+                }
+ 
+            }
+        }
+
+        THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"] = targetDict;
+ 
 }
 
 ///获取次日命中股票
@@ -388,6 +442,8 @@ THSDataAnalyseV2.GetLaw = function () {
             //item["前" + item.Interval + "天营业部买入占总成交比例小于5%"]
             //item["XXX营业部买入额"]
             //item["XXX营业部卖出额"]
+
+            THSDataAnalyseV2.BrokerBehaviorAnalyse(item);
 
         }
         else if ("涨幅在5%以上的股票日线的前5日对应的资金流向" === item.ContentType) {
