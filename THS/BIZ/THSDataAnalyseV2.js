@@ -243,25 +243,42 @@ THSDataAnalyseV2.GetMostActiveBroker = function (dbItem, hasFinish) {
     }
 
 
+    ///字典转数组
+    var targetArray = [];
+    if (true === hasFinish) {
+        var sourceDict = THSDataAnalyseV2.DataOUT["营业部参与情况"];
+        for (var key in sourceDict) {
+            var dictItem = sourceDict[key];
+            dictItem.ContentType = "营业部参与情况";
+            targetArray.push(dictItem);
+        }
+        THSDataAnalyseV2.DataOUT["营业部参与情况"] = targetArray;
+    }
+
+
 }
 
 
 
+///分析营业部的行为
+THSDataAnalyseV2.BrokerBehaviorAnalyse = function (dbItem,hasFinish) {
 
-THSDataAnalyseV2.BrokerBehaviorAnalyse = function (dbItem) {
-    ///从明细中获取营业部，获取上榜当日和第二天，第三天，第四天的走势（根据买入，卖出比例分）
-    var sourceLHBMX = THSDataAnalyseV2.DataIN["个股龙虎榜明细"];
-    var sourceKLineDict = THSDataAnalyseV2.DataIN["日线数据字典"];
-    if (undefined === THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"]) {
-        THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"] = {};
-    }
-    targetDict = THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"];
- 
- 
+    if (undefined === hasFinish) {
+        ///从明细中获取营业部，获取上榜当日和第二天，第三天，第四天的走势（根据买入，卖出比例分）
+        var sourceLHBMX = THSDataAnalyseV2.DataIN["个股龙虎榜明细"];
+        var sourceKLineDict = THSDataAnalyseV2.DataIN["日线数据字典"];
+        if (undefined === THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"]) {
+            THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"] = [];
+            THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天总涨幅"] = {};
+        }
+        var targetArray = THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"];
+        var yybOPDict = THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天总涨幅"];
+
         var row = dbItem;
         var lhbDate = dbItem.TradingDate;///上龙虎榜的交易日
-  
-        ///找前5天K线
+
+        var tmpArr = [];
+        ///找后5天K线
         for (var d = 1; d <= 5; d++) {
             var date = new Date(lhbDate + 1000 * d * 3600 * 24);///上龙虎榜的后1-5天
             var key = dbItem.StockCode + dbItem.StockName + date.toString();
@@ -277,36 +294,49 @@ THSDataAnalyseV2.BrokerBehaviorAnalyse = function (dbItem) {
                     "龙虎榜净买入占比": row.C4 - row.C6,
                     Interval: d,
                     Increase: sourceKLineDict[key].Increase,
-                    "涨幅": "前" + d + "天涨幅" + sourceKLineDict[key].Increase
+                    "涨幅": "后" + d + "天涨幅" +( sourceKLineDict[key].Increase*100) + "%"
                 }
 
-                if (undefined === targetDict[row.C2]) {
-                    targetDict[row.C2] = {};
-                }
-
-                if (0 < item["龙虎榜净买入占比"]) {
-                    if (undefined === targetDict[row.C2]["买入的前" + d + "天涨幅"]) {
-                        targetDict[row.C2]["买入的前" + d + "天涨幅"] = { "2%以下": 0, "2%到5%": 0, "5%到8%": 0, "8%以上": 0 };
-                    }
-
-                    if (item.Increase <= 0.02) {
-                        targetDict[row.C2]["买入的前" + d + "天涨幅"]["2%以下"] += 1;
-                    }
-                    else if (0.02 < item.Increase && item.Increase <= 0.05) {
-                        targetDict[row.C2]["买入的前" + d + "天涨幅"]["2%到5%"] += 1;
-                    }
-                    else if (0.05 < item.Increase && item.Increase <= 0.08) {
-                        targetDict[row.C2]["买入的前" + d + "天涨幅"]["5%到8%"] += 1;
-                    }
-                    else if (0.05 < item.Increase && item.Increase <= 0.08) {
-                        targetDict[row.C2]["买入的前" + d + "天涨幅"]["8%以上"] += 1;
-                    }
-                }
- 
+                targetArray.push(item);
+                tmpArr.push(item);
             }
         }
 
-        THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"] = targetDict;
+        ///龙虎榜营业部介入后5天成功情况
+        if (undefined === yybOPDict[item.Broker]) {
+            yybOPDict[item.Broker] = {ContentType: "龙虎榜营业部买入或卖出后5天总涨幅", YYB: item.Broker, "买入后5日总涨幅": -9999, "卖出后5日总涨幅": -9999, "买入次数": 0, "卖出次数": 0 };///初始化容器
+        } 
+
+        if (0 < row.C4 - row.C6) {
+            yybOPDict[item.Broker]["买入后5日总涨幅"] = (-9999 === yybOPDict[item.Broker]["买入后5日总涨幅"])? ((tmpArr[0].Increase + tmpArr[1].Increase + tmpArr[2].Increase + tmpArr[3].Increase + tmpArr[4].Increase) / 5) / 1:(yybOPDict[item.Broker]["买入后5日总涨幅"] + (tmpArr[0].Increase + tmpArr[1].Increase + tmpArr[2].Increase + tmpArr[3].Increase + tmpArr[4].Increase) / 5) / 2;
+            yybOPDict[item.Broker]["买入次数"] += 1;
+        }
+        else if (row.C4 - row.C6<0) {
+            yybOPDict[item.Broker]["卖出后5日总涨幅"] = (-9999 === yybOPDict[item.Broker]["卖出后5日总涨幅"]) ? ((tmpArr[0].Increase + tmpArr[1].Increase + tmpArr[2].Increase + tmpArr[3].Increase + tmpArr[4].Increase) / 5) / 1 : (yybOPDict[item.Broker]["卖出后5日总涨幅"] + (tmpArr[0].Increase + tmpArr[1].Increase + tmpArr[2].Increase + tmpArr[3].Increase + tmpArr[4].Increase) / 5) / 2;
+            yybOPDict[item.Broker]["卖出次数"] += 1;
+        }
+
+
+
+        THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天K线走势"] = targetArray;
+        THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天总涨幅"]= yybOPDict ;
+
+
+    }
+
+         ///字典转数组
+    if (true === hasFinish) {
+        var yybOPDict = THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天总涨幅"];
+            var yybOPArray = [];
+            for (var yybName in yybOPDict) {
+                var item = yybOPDict[yybName];
+
+                yybOPArray.push(item);
+            }
+
+            THSDataAnalyseV2.DataOUT["龙虎榜营业部买入或卖出后5天总涨幅"] = yybOPArray;
+
+        }
  
 }
 
@@ -464,7 +494,9 @@ THSDataAnalyseV2.GetLaw = function () {
             result1["前" +item.Interval + "天资金小单净占比20%以上"] += (20 < item.C11) ? 1 : 0;;
         }
     }
+
     THSDataAnalyseV2.GetMostActiveBroker(null, true);
+    THSDataAnalyseV2.BrokerBehaviorAnalyse(null, true);
     THSDataAnalyseV2.DataOUT["前5日总体规律"] = result1;
 }
 

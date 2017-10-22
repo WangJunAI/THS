@@ -31,6 +31,30 @@ var TOOLS = {
 
             }
         },
+
+        ///数组转字典
+        ArrayToDict: function (sourceArray, key) {
+
+            var targetDict = {};
+
+            for (var k = 0; k < sourceArray.length; k++) {
+                var item = sourceArray[k];
+                if (true === PARAM_CHECKER.IsEmptyString(key)) {
+                    targetDict[item[key]] = item;
+                }
+                else if (true === PARAM_CHECKER.IsArray(key)) {
+                    var keystr = key.join("");
+                    targetDict[item[keystr]] = item;
+                }
+                else if (true === PARAM_CHECKER.IsFunction(key)) {
+                    key(k, item, targetDict,sourceArray.length);
+                }
+            }
+
+            return targetDict;
+        },
+
+
         ///百分号转换 5% == 0.05
         PercentToNumber: function (input) {
             return Number(input.replace("%", "")) / Number(100.0);///
