@@ -1,5 +1,6 @@
 ﻿var PARAM_CHECKER = require("./PARAM_CHECKER");
 var $ = require('cheerio');
+var CryptoTools = require("../Core/CryptoTools");
 ///常用工具
 var TOOLS = {
     ///日期常用
@@ -171,6 +172,47 @@ var TOOLS = {
                 keyCount++;
             }
             return keyCount;
+        },
+        ///多维json对象转化为二维对象
+        MultiDTo2D: function (source,propertyName,rootID,layer) {
+            var array = [];
+            var item = {};
+            layer = (undefined == layer) ? 0 : layer+1;
+            for (var key in source) {
+                item._ContentType = (undefined === propertyName) ? "Root" : propertyName;
+                if (undefined === source._id  ) {
+                    item._RootID = (undefined === propertyName) ? CryptoTools.MD5(JSON.stringify(source)) : rootID;
+                    rootID = item._RootID;
+                }
+                else if (undefined != source._id&& undefined === item._RootID){
+                    item._RootID = (undefined === propertyName) ? source._id.toString() : rootID;
+                    rootID = item._RootID;
+                }
+                
+                
+                item._Layer = layer;
+                var prop = source[key];
+                //console.log(key + " " + prop);
+                if (undefined != prop._bsontype && "ObjectID" === prop._bsontype) {
+                    item[key] = prop.toString();
+                }
+                if (PARAM_CHECKER.IsDate(prop) || PARAM_CHECKER.IsString(prop) || PARAM_CHECKER.IsNumber(prop)) {
+                    ///若是基本数据类型
+                    item[key] = prop;
+                }
+                else if (true === PARAM_CHECKER.IsObject(prop) && !PARAM_CHECKER.IsArray(prop)) {
+                    var subArr = TOOLS.JSON.MultiDTo2D(prop, key, rootID,layer);
+                    array = array.concat(subArr);
+                }
+                else if (true === PARAM_CHECKER.IsArray(prop)) {
+                    for (var k = 0; k < prop.length; k++) {
+                        var subArr = TOOLS.JSON.MultiDTo2D(prop[k], key + "_" + k, rootID, layer);
+                        array = array.concat(subArr);
+                    }
+                }
+            }
+            array.push(item);
+            return array;
         }
     }
 

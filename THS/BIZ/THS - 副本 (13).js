@@ -14,17 +14,40 @@ var THSPageAnalyse = require("../BIZ/THSPageAnalyse");
 var THSDataAnalyseV2 = require("../BIZ/THSDataAnalyseV2");
 var THSMonitor = require("../BIZ/THSMonitor");
 var $ = require('cheerio');
-var WJMutilTask = require("../Core/WJMutilTask");
  
 ///同花顺业务处理
 var THS = {
  
+ 
+ 
+    ///页面遍历V2
+    TraversePager_Page: function () {
+        return;
+        var sourceDB = THSDB.GetMongo02();
+        var targetDB = THSDB.GetMongo02();
+        var targetCollectionName =THSDB.Mongo02Table.DataGGLHB+"V2"; //THSDB.Mongo02Table.DataStock;//THSDB.Mongo02Table.DataKLine;
+
+        var sourceParam = MongoDB.ParamCreator.EmptyFindProcParam();
+        sourceParam.DB = sourceDB;
+        sourceParam.CollectionName = THSDB.Mongo02Table.PageGGLHB;//THSDB.Mongo02Table.PageStock;//THSDB.Mongo02Table.PageKLine;
+        sourceParam.Filter = { };//ContentType:"资金流向"
+
+
+        var callback = function (dbItem, pagerInfo) {
+            var res = THSPageAnalyse.GetDataFromPage(dbItem);
+            targetDB.Save(targetCollectionName, res, function (err,res,remaining) {
+                console.log("存储队列剩余元素"+remaining);
+            }, 0)
+        }
+        sourceDB.FindProc(sourceParam,callback,true);
+    },
+
     ///页面遍历V2 一次性计算完全部数据
     TraversePager_PageV2: function () {
 
         var sourceDB = THSDB.GetMongo02();
         var targetDB = THSDB.GetMongo02();
-        var targetCollectionMap = { "PageKLine": "DataKLine", "PageGGLHB": "DataGGLHB", "PageStock": "DataStock" };
+        var targetCollectionName = THSDB.Mongo02Table.DataInterResult;
         var sourceArray = [];
 
         sourceArray.push({ CollectionName: "PageKLine", Filter: {  }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
@@ -35,73 +58,21 @@ var THS = {
         var callback = function (dbItem, pagerInfo, isLastItem) {
             console.log("TraversePager_PageV2 当前遍历位置 " + pagerInfo.CollectionName + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize);
 
-            var res = THSPageAnalyse.GetDataFromPage(dbItem, pagerInfo);
- 
-            targetDB.Save(targetCollectionMap[pagerInfo.CollectionName], res, function (err, res, remaining) {
-                if (0 === remaining) {
-                    if (0 < sourceArray.length) {
-                        ///若没有结束 开始处理第二个集合
-                        var param2 = sourceArray.shift();
+            THSPageAnalyse.GetDataFromPage(dbItem, pagerInfo);
 
-                        sourceDB.FindProc(param2, callback, true);
-                        console.log("开始加载下一个结果集... " + param2.CollectionName);
+            if (true === pagerInfo.IsLastPage && true === isLastItem) { ///若是最后一页的最后一个项目
+                if (0 < sourceArray.length) {
+                    ///若没有结束 开始处理第二个集合
+                    var param2 = sourceArray.shift();
 
-                    }
-                    else if (0 === sourceArray.length) {///若全部数据遍历完毕
-                        console.log("数据遍历完毕");
-                    }
+                    sourceDB.FindProc(param2, callback, true);
+                    console.log("开始加载下一个结果集... " + param2.CollectionName);
+
                 }
-            });
-
-
-           
-        }
-
-        ///开始第一个集合遍历
-        var param1 = sourceArray.shift();
-        sourceDB.FindProc(param1, callback, true);
-    },
-
-    TraversePager_MutilDTo2D: function () {
-
-        var sourceDB = THSDB.GetMongo02();
-        var targetDB = THSDB.GetMongo02();
-        var targetCollectionMap = { "DataKLine": "DataKLine2D", "DataGGLHB": "DataGGLHB2D", "DataStock": "DataStock2D" };
-        var sourceArray = [];
-
-        sourceArray.push({ CollectionName: "DataKLine", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 1 } });
-        sourceArray.push({ CollectionName: "DataGGLHB", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 1 } });
-        sourceArray.push({ CollectionName: "DataStock", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 1 } });
-
-
-        var callback = function (dbItem, pagerInfo, isLastItem) {
-            console.log("TraversePager_MutilDTo2D 当前遍历位置 " + pagerInfo.CollectionName + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize);
-
-            var arr = TOOLS.JSON.MultiDTo2D(dbItem);
-            while (0 < arr.length) {
-                var arrItem = arr.shift();
-                WJMutilTask.CreateWorkProcessor({ data: arrItem });
-                //targetDB.Save(targetCollectionMap[pagerInfo.CollectionName], arrItem, function (err, res, remaining) {
-                //    if (0 === remaining) {
-                //        if (0 < sourceArray.length) {
-                //            ///若没有结束 开始处理第二个集合
-                //            var param2 = sourceArray.shift();
-
-                //            sourceDB.FindProc(param2, callback, true);
-                //            console.log("开始加载下一个结果集... " + param2.CollectionName);
-
-                //        }
-                //        else if (0 === sourceArray.length) {///若全部数据遍历完毕
-                //            console.log("数据遍历完毕");
-                //        }
-                //    }
-                //});
+                else if (0 === sourceArray.length) {///若全部数据遍历完毕
+                    console.log("数据遍历完毕");
+                }
             }
-
-
-
-
-
         }
 
         ///开始第一个集合遍历
