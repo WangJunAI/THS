@@ -200,7 +200,7 @@ var TOOLS = {
                     ///若是基本数据类型
                     item[key] = prop;
                 }
-                else if (true === PARAM_CHECKER.IsObject(prop) && !PARAM_CHECKER.IsArray(prop)) {
+                else if (true === PARAM_CHECKER.IsObject(prop) && !PARAM_CHECKER.IsArray(prop) && "ObjectID" != prop._bsontype) {
                     var subArr = TOOLS.JSON.MultiDTo2D(prop, key, rootID,layer);
                     array = array.concat(subArr);
                 }

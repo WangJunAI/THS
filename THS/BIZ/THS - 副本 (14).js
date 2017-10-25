@@ -18,18 +18,18 @@ var WJMutilTask = require("../Core/WJMutilTask");
  
 ///同花顺业务处理
 var THS = {
-    Task:[],
+ 
     ///页面遍历V2 一次性计算完全部数据
     TraversePager_PageV2: function () {
 
         var sourceDB = THSDB.GetMongo02();
         var targetDB = THSDB.GetMongo02();
-        var targetCollectionMap = { "PageKLine": "DataKLine", "PageGGLHB": "DataGGLHB", "PageStock": "DataStock" };
+        var targetCollectionMap = { "PageKLine": "DataKLine", "PageGGLHB": "DataGGLHB", "PageStock": "DataStockDD" };
         var sourceArray = [];
 
-        sourceArray.push({ CollectionName: "PageKLine", Filter: {  }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "PageGGLHB", Filter: {  }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "PageStock", Filter: { }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "PageKLine", Filter: {  }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "PageGGLHB", Filter: {  }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        sourceArray.push({ CollectionName: "PageStock", Filter: { "ContentType":"首页概览" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
 
 
         var callback = function (dbItem, pagerInfo, isLastItem) {
@@ -39,27 +39,16 @@ var THS = {
  
             targetDB.Save(targetCollectionMap[pagerInfo.CollectionName], res, function (err, res, remaining) {
                 if (0 === remaining) {
+                    if (0 < sourceArray.length) {
+                        ///若没有结束 开始处理第二个集合
+                        var param2 = sourceArray.shift();
 
-                    if (true === pagerInfo.IsLastPage && true === pagerInfo.IsLastItem) {
-                        sourceArray.shift();///抛弃掉
-                        if (0 < sourceArray.length) {
-                            ///若没有结束 开始处理第二个集合
-                            //var param2 = sourceArray.shift();
-                            var param2 = sourceArray.slice(0,1)[0];
+                        sourceDB.FindProc(param2, callback, true);
+                        console.log("开始加载下一个结果集... " + param2.CollectionName);
 
-                            sourceDB.FindProc(param2, callback, false);
-                            console.log("开始加载下一个结果集... " + param2.CollectionName);
-
-                        }
-                        else if (0 === sourceArray.length) {///若全部数据遍历完毕
-                            console.log("数据遍历完毕");
-                            THS.ExcuteNextTask();
-                        }
                     }
-                    else {
-                        var param3 = sourceArray.slice(0, 1)[0];
-                        param3.Pager.Index = pagerInfo.NextIndex;
-                        sourceDB.FindProc(param3, callback, false);
+                    else if (0 === sourceArray.length) {///若全部数据遍历完毕
+                        console.log("数据遍历完毕");
                     }
                 }
             });
@@ -69,21 +58,20 @@ var THS = {
         }
 
         ///开始第一个集合遍历
-        //var param1 = sourceArray.shift();
-        param1 = sourceArray.slice(0,1)[0];
-        sourceDB.FindProc(param1, callback, false);
+        var param1 = sourceArray.shift();
+        sourceDB.FindProc(param1, callback, true);
     },
 
     TraversePager_MutilDTo2D: function () {
 
         var sourceDB = THSDB.GetMongo02();
         var targetDB = THSDB.GetMongo02();
-        var targetCollectionMap = { "DataKLine": "DataKLine2D", "DataGGLHB": "DataGGLHB2D", "DataStock": "DataStock2D" };///数据映射
+        var targetCollectionMap = { "DataKLine": "DataKLine2D", "DataGGLHB": "DataGGLHB2D", "DataStock": "DataStock2D" };
         var sourceArray = [];
 
-        sourceArray.push({ CollectionName: "DataKLine", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 10 } });
-        sourceArray.push({ CollectionName: "DataGGLHB", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 10 } });
-        sourceArray.push({ CollectionName: "DataStock", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 10 } });
+        sourceArray.push({ CollectionName: "DataKLine", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 1 } });
+        sourceArray.push({ CollectionName: "DataGGLHB", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 1 } });
+        sourceArray.push({ CollectionName: "DataStock", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 1 } });
 
 
         var callback = function (dbItem, pagerInfo, isLastItem) {
@@ -92,28 +80,19 @@ var THS = {
             var arr = TOOLS.JSON.MultiDTo2D(dbItem);///二维化
             while (0 < arr.length) {
                 var arrItem = arr.shift(); 
+
                 targetDB.Save(targetCollectionMap[pagerInfo.CollectionName], arrItem, function (err, res, remaining) {
                     if (0 === remaining) {
-                        if (true === pagerInfo.IsLastPage && true === pagerInfo.IsLastItem) {
-                            sourceArray.shift();///抛弃掉
-                            if (0 < sourceArray.length) {
-                                ///若没有结束 开始处理第二个集合
-                                //var param2 = sourceArray.shift();
-                                var param2 = sourceArray.slice(0, 1)[0];
+                        if (0 < sourceArray.length) {
+                            ///若没有结束 开始处理第二个集合
+                            var param2 = sourceArray.shift();
 
-                                sourceDB.FindProc(param2, callback, false);
-                                console.log("开始加载下一个结果集... " + param2.CollectionName);
+                            sourceDB.FindProc(param2, callback, true);
+                            console.log("开始加载下一个结果集... " + param2.CollectionName);
 
-                            }
-                            else if (0 === sourceArray.length) {///若全部数据遍历完毕
-                                console.log("数据遍历完毕");
-                                THS.ExcuteNextTask();
-                            }
                         }
-                        else {
-                            var param3 = sourceArray.slice(0, 1)[0];
-                            param3.Pager.Index = pagerInfo.NextIndex;///开始遍历下一页
-                            sourceDB.FindProc(param3, callback, false);
+                        else if (0 === sourceArray.length) {///若全部数据遍历完毕
+                            console.log("数据遍历完毕");
                         }
                     }
                 });
@@ -126,8 +105,8 @@ var THS = {
         }
 
         ///开始第一个集合遍历
-        var param1 = sourceArray.slice()[0];
-        sourceDB.FindProc(param1, callback, false);
+        var param1 = sourceArray.shift();
+        sourceDB.FindProc(param1, callback, true);
     },
 
     ///页面遍历V2 一次性计算完全部数据
@@ -141,8 +120,7 @@ var THS = {
         sourceArray.push({ CollectionName: "DataKLine", Filter: { ContentType: "日线数据" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
         sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜" }, DB: sourceDB,   Pager: { Index: 0, Size: 100 } });
         sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜明细" }, DB: sourceDB,  Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "资金流向" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "首页概览" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "资金流向" }, DB: sourceDB,  Pager: { Index: 0, Size: 100 } });
   
           
         var callback = function (dbItem, pagerInfo, isLastItem) {
@@ -186,7 +164,7 @@ var THS = {
                     var param2 = sourceArray.shift();
                      
                     sourceDB.FindProc(param2, callback, true);
-                    console.log("TraversePager_Data 开始加载下一个结果集... " + param2.CollectionName);
+                    console.log("开始加载下一个结果集... " + param2.CollectionName);
 
                 }
                 else if (0 === sourceArray.length) {///若全部数据遍历完毕
@@ -252,22 +230,7 @@ var THS = {
         });
     },
 
-    Run: function () {
-        THS.Task.push(THS.TraversePager_PageV2);
-        THS.Task.push(THS.TraversePager_Data);
-        THS.Task.push(THS.TraversePager_MutilDTo2D);
-        THS.ExcuteNextTask();
-    },
 
-    ExcuteNextTask: function () {
-        if (0 < THS.Task.length) {
-            var task = THS.Task.shift();
-            task();
-        }
-        else {
-            console.log("所有任务全部结束.")
-        }
-    },
 
 
     ///清理大单垃圾数据

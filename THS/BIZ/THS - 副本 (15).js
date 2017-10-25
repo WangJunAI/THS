@@ -24,7 +24,7 @@ var THS = {
 
         var sourceDB = THSDB.GetMongo02();
         var targetDB = THSDB.GetMongo02();
-        var targetCollectionMap = { "PageKLine": "DataKLine", "PageGGLHB": "DataGGLHB", "PageStock": "DataStock" };
+        var targetCollectionMap = { "PageKLine": "DataKLine", "PageGGLHB": "DataGGLHB", "PageStock": "DataStockDD" };
         var sourceArray = [];
 
         sourceArray.push({ CollectionName: "PageKLine", Filter: {  }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
@@ -81,9 +81,9 @@ var THS = {
         var targetCollectionMap = { "DataKLine": "DataKLine2D", "DataGGLHB": "DataGGLHB2D", "DataStock": "DataStock2D" };///数据映射
         var sourceArray = [];
 
-        sourceArray.push({ CollectionName: "DataKLine", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 10 } });
-        sourceArray.push({ CollectionName: "DataGGLHB", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 10 } });
-        sourceArray.push({ CollectionName: "DataStock", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 10 } });
+        sourceArray.push({ CollectionName: "DataKLine", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 1 } });
+        sourceArray.push({ CollectionName: "DataGGLHB", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 1 } });
+        sourceArray.push({ CollectionName: "DataStock", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 1 } });
 
 
         var callback = function (dbItem, pagerInfo, isLastItem) {
@@ -186,7 +186,7 @@ var THS = {
                     var param2 = sourceArray.shift();
                      
                     sourceDB.FindProc(param2, callback, true);
-                    console.log("TraversePager_Data 开始加载下一个结果集... " + param2.CollectionName);
+                    console.log("开始加载下一个结果集... " + param2.CollectionName);
 
                 }
                 else if (0 === sourceArray.length) {///若全部数据遍历完毕

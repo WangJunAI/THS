@@ -381,6 +381,7 @@ var MongoDB = {
                 var qItem = dataArray.pop();
                 if (true === PARAM_CHECKER.IsFunction(callback)) {
                     var isLastItem = (0 === dataArray.length);///判断是否是最后一个元素
+                    pagerInfo.IsLastItem = isLastItem;
                     callback(qItem,pagerInfo,isLastItem); ///业务处理
                 }
             }

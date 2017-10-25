@@ -39,8 +39,8 @@ var THSDB = {
     GetMongo02: function () {
         if (null == THSDB.Mongo02) {
             var opt = MongoDB.GetEmptyOption();
-            opt.url = "mongodb://192.168.0.140:27017/THSV2";
-            var db = MongoDB.GetInst("THSV2", opt);
+            opt.url = "mongodb://192.168.0.140:27017/THSV1025";
+            var db = MongoDB.GetInst("THSV1025", opt);
             THSDB.Mongo02Table = {};
             THSDB.Mongo02Table["PageFundsStock"] = "PageFundsStock";///个股资金榜单
             THSDB.Mongo02Table["PageGGLHB"] = "PageGGLHB";///龙虎榜页面

@@ -34,8 +34,8 @@ var THSPageAnalyse = {
         else if ("资金流向" === dbItem.ContentType) {
             data = THSPageStock.GetDataFromPageV2(dbItem);
         }
-        else if ("" === dbItem.ContentType) {
-
+        else if ("首页概览" === dbItem.ContentType) {
+            data = THSPageStock.GetDataFromPageV2(dbItem);
         }
         else if ("" === dbItem.ContentType) {
 
