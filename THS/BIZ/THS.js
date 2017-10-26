@@ -193,7 +193,7 @@ var THS = {
                     console.log("分析及保存数据...");
                     THSDataAnalyseV2.DataAnalyse();
                     THSDataAnalyseV2.SaveResult(targetDB);
-                    
+                    THS.ExcuteNextTask();
                 }
             }
         }
@@ -253,8 +253,8 @@ var THS = {
     },
 
     Run: function () {
-        THS.Task.push(THS.TraversePager_PageV2);
-        THS.Task.push(THS.TraversePager_Data);
+        //THS.Task.push(THS.TraversePager_PageV2);
+        //THS.Task.push(THS.TraversePager_Data);
         THS.Task.push(THS.TraversePager_MutilDTo2D);
         THS.ExcuteNextTask();
     },

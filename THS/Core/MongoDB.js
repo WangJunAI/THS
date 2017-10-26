@@ -370,6 +370,8 @@ var MongoDB = {
         var sourcePageIndex = source.Pager.Index;
         var sourcePageSize = source.Pager.Size;
 
+        needTraverse == (undefined === needTraverse) ? false : needTraverse;
+
         var callbackError = function (err) {
             console.log("MongoDB FindProc Err " + JSON.stringify(err));
         }
@@ -391,16 +393,23 @@ var MongoDB = {
             else {
                 console.log("FindProc "+sourceCollectionName+" 遍历全部完毕");
             }
-
         }
-
-
-
+        
         ///开始循环遍历
         sourceDB.TraversePager(sourceCollectionName, sourceFilter, sourcePageIndex, sourcePageSize, callbackFind, callbackError);
+    },
 
-
-
+    Find: function (source, callback) {
+        var _THIS = this;
+        var array = [];
+        var callbacItem = function (qItem, pagerInfo) {
+            array.push(qItem);
+            if (true === pagerInfo.IsLastPage && true === pagerInfo.IsLastItem) {
+                callback(array, pagerInfo);
+            }
+        }
+        _THIS.FindProc(source, callbacItem, false);
+        
     }
 
 }
