@@ -8,6 +8,7 @@ var THSDB = {
     Mongo02Table: null,
     Mongo02: null,
     MSSQL: null,
+    DB: {},
 
     GetMongo01: function () {
         if (null == THSDB.Mongo01) {
@@ -57,6 +58,17 @@ var THSDB = {
 
         }
         return db;
+    },
+
+    ///第二版龙虎榜数据库
+    GetMongo: function (dbName) {
+        if (undefined == THSDB.DB[dbName]) {
+            var opt = MongoDB.GetEmptyOption();
+            opt.url = "mongodb://192.168.0.140:27017/" + dbName;
+            var db = MongoDB.GetInst(dbName, opt);
+            THSDB.DB[dbName] = db;
+        }
+        return THSDB.DB[dbName];
     },
 
     ///遍历

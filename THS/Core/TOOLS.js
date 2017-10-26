@@ -193,7 +193,7 @@ var TOOLS = {
                 item._Layer = layer;
                 var prop = source[key];
                 //console.log(key + " " + prop);
-                if (undefined != prop._bsontype && "ObjectID" === prop._bsontype) {
+                if (true === PARAM_CHECKER.IsObject(prop) &&undefined != prop._bsontype && "ObjectID" === prop._bsontype) {
                     item[key] = prop.toString();
                 }
                 if (PARAM_CHECKER.IsDate(prop) || PARAM_CHECKER.IsString(prop) || PARAM_CHECKER.IsNumber(prop)) {

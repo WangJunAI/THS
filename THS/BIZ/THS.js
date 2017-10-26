@@ -202,7 +202,62 @@ var THS = {
         var param1 = sourceArray.shift();
         sourceDB.FindProc(param1, callback, true);
     },
- 
+
+
+    TraversePager_PageSINA: function () {
+        var sourceDB = THSDB.GetMongo("SINA");
+        var targetDB = THSDB.GetMongo("SINA");
+        var targetCollectionMap = { "DaDan": "DataDaDan"};
+        var sourceArray = [];
+
+        sourceArray.push({ CollectionName: "DaDan", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+
+
+        var callback = function (dbItem, pagerInfo, isLastItem) {
+            console.log("TraversePager_PageSINA 当前遍历位置 " + pagerInfo.CollectionName + " " + pagerInfo.CurrentIndex + " " + pagerInfo.PageSize);
+            var res = {
+                ContentType: dbItem.ContentType,
+                MD5: dbItem.MD5,
+                TaskID: dbItem.TaskID,
+                Url: dbItem.Url,
+                Data: eval(dbItem.Page.replace(/\0/g, ''))
+            }
+             
+            targetDB.Save(targetCollectionMap[pagerInfo.CollectionName], res, function (err, res, remaining) {
+                if (0 === remaining) {
+
+                    if (true === pagerInfo.IsLastPage && true === pagerInfo.IsLastItem) {
+                        sourceArray.shift();///抛弃掉
+                        if (0 < sourceArray.length) {
+                            ///若没有结束 开始处理第二个集合 
+                            var param2 = sourceArray.slice(0, 1)[0];
+
+                            sourceDB.FindProc(param2, callback, false);
+                            console.log("开始加载下一个结果集... " + param2.CollectionName);
+
+                        }
+                        else if (0 === sourceArray.length) {///若全部数据遍历完毕
+                            console.log("数据遍历完毕，执行下一步骤");
+                            THS.ExcuteNextTask();
+                        }
+                    }
+                    else {
+                        var param3 = sourceArray.slice(0, 1)[0];
+                        param3.Pager.Index = pagerInfo.NextIndex;
+                        sourceDB.FindProc(param3, callback, false);
+                    }
+                }
+            });
+
+
+
+        }
+
+        ///开始第一个集合遍历
+        //var param1 = sourceArray.shift();
+        param1 = sourceArray.slice(0, 1)[0];
+        sourceDB.FindProc(param1, callback, false);
+    },
  
 
     TraversePager_ForMonitor: function () {
@@ -255,7 +310,8 @@ var THS = {
     Run: function () {
         //THS.Task.push(THS.TraversePager_PageV2);
         //THS.Task.push(THS.TraversePager_Data);
-        THS.Task.push(THS.TraversePager_MutilDTo2D);
+        //THS.Task.push(THS.TraversePager_MutilDTo2D);
+        THS.Task.push(THS.TraversePager_PageSINA);
         THS.ExcuteNextTask();
     },
 
