@@ -17,12 +17,14 @@ THSDataAnalyseV2.SaveResult = function (db) {
         if (PARAM_CHECKER.IsArray(source[key])) {
             while (0 < source[key].length) {
                 var item = source[key].pop();
+                console.log("A "+JSON.stringify(item));
                 db.Save("DataResult", item, function (err, res, remaining) {
                     console.log("剩余 " + remaining);
                 }, 0);
             }
         }
         else if (PARAM_CHECKER.IsObject(source[key])) {
+            console.log("O "+JSON.stringify(source[key]));
             db.Save("DataResult", source[key], function (err, res, remaining) {
                 console.log("剩余 " + remaining);
             }, 0);
@@ -81,9 +83,10 @@ THSDataAnalyseV2.GetTargetStockByIncrease = function (increase) {
 
     var targetInc = TOOLS.Convertor.PercentToNumber(increase); ///目标股票涨幅
     var source = THSDataAnalyseV2.DataIN["日线数据"];
-    var targetStock = [];
+ 
 
-    //while (0 < source.length) {
+    var targetStock = [];
+     
     for (var q = 0; q < source.length; q++) {
         var sourceItem = source[q];
         var dataArray = sourceItem.Data;
@@ -345,15 +348,26 @@ THSDataAnalyseV2.GetTargetStockNextDay = function () {
 
 }
 
+///个股分析 生成低维度数据集
+THSDataAnalyseV2.GetStockAnalyse = function () {
+    ///截至最后一个交易日
+    ///风险(大宗交易),机会(新闻热度),基底(盈利情况,资本),资金()
+
+}
+
+
 ///整体数据分析
 THSDataAnalyseV2.DataAnalyse = function () {
-    THSDataAnalyseV2.GetTargetStockByIncrease("5%"); ///获取目标股票
-    ///释放缓存
-    THSDataAnalyseV2.GetTargetStockPrev5LHB();///获取目标股票前5日的龙虎榜信息
-    ///释放缓存
-    THSDataAnalyseV2.GetTargetStockPrev5Funds();///获取目标股票前5日的龙虎榜信息
-    ///释放缓存
-    THSDataAnalyseV2.GetLaw();
+    THSDataAnalyseV2.GetSummaryInfo();
+
+
+    //THSDataAnalyseV2.GetTargetStockByIncrease("5%"); ///获取目标股票
+    /////释放缓存
+    //THSDataAnalyseV2.GetTargetStockPrev5LHB();///获取目标股票前5日的龙虎榜信息
+    /////释放缓存
+    //THSDataAnalyseV2.GetTargetStockPrev5Funds();///获取目标股票前5日的龙虎榜信息
+    /////释放缓存
+    //THSDataAnalyseV2.GetLaw();
 
 
 }
@@ -498,6 +512,67 @@ THSDataAnalyseV2.GetLaw = function () {
     THSDataAnalyseV2.GetMostActiveBroker(null, true);
     THSDataAnalyseV2.BrokerBehaviorAnalyse(null, true);
     THSDataAnalyseV2.DataOUT["前5日总体规律"] = result1;
+}
+
+///计算概要信息
+THSDataAnalyseV2.GetSummaryInfo = function () {
+    var source = THSDataAnalyseV2.DataIN["首页概览"];
+    if (undefined === THSDataAnalyseV2.DataOUT["区域"]) {
+        THSDataAnalyseV2.DataOUT["区域"] = {};
+    }
+
+    if (undefined === THSDataAnalyseV2.DataOUT["概念"]) {
+        THSDataAnalyseV2.DataOUT["概念"] = { };
+    }
+
+    if (undefined === THSDataAnalyseV2.DataOUT["业务"]) {
+        THSDataAnalyseV2.DataOUT["业务"] = { };
+    }
+    var target1 = THSDataAnalyseV2.DataOUT["区域"];
+    var target2 = THSDataAnalyseV2.DataOUT["概念"];
+    var target3 = THSDataAnalyseV2.DataOUT["业务"];
+
+    for (var m = 0; m < source.length; m++) {
+        var dbItem = source[m];
+        var area = dbItem.Company.Value[0].trim();
+        var conception = dbItem.Company.Value[1].trim().split(/[，、]/g);
+        var biz = dbItem.Company.Value[3].trim().split(/[；、。，]/g);
+        if (undefined === target1[area]) {
+            target1[area] = { "总数": 0 };
+        }
+
+        target1[area]["总数"] += 1;
+
+        for (var k = 0; k < conception.length; k++) {
+            conception[k] = conception[k].trim().replace(/\./g, '_');
+            if (undefined === target2[conception[k]] && PARAM_CHECKER.IsString(conception[k])) {
+                target2[conception[k]] = { "总数": 0 };
+            }
+            target2[conception[k]]["总数"] += 1;
+        }
+
+        for (var k = 0; k < biz.length; k++) {
+            biz[k] = biz[k].trim().replace(/\./g, '_');
+            if (undefined === target3[biz[k]] && PARAM_CHECKER.IsString(biz[k])) {
+                target3[biz[k]] = { "总数": 0 };
+            }
+            target3[biz[k]]["总数"] += 1;
+        }
+
+    }
+
+    delete target1[""];
+    delete target2[""];
+    delete target3[""];
+
+    ///字段转数组
+    target1 = TOOLS.Convertor.DictToArray(target1, function (item) { item.ContentType = "区域分析";  return item; });
+    target2 = TOOLS.Convertor.DictToArray(target2, function (item) {  item.ContentType = "概念分析";  return item; });
+    target3 = TOOLS.Convertor.DictToArray(target3, function (item) {  item.ContentType = "业务分析";   return item; });
+    THSDataAnalyseV2.DataOUT["区域"] = target1;
+    THSDataAnalyseV2.DataOUT["概念"] = target2;
+    THSDataAnalyseV2.DataOUT["业务"] = target3;
+
 }
 
 

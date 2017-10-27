@@ -138,10 +138,10 @@ var THS = {
         var targetCollectionName = THSDB.Mongo02Table.DataInterResult;
         var sourceArray = [];
 
-        sourceArray.push({ CollectionName: "DataKLine", Filter: { ContentType: "日线数据" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜" }, DB: sourceDB,   Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜明细" }, DB: sourceDB,  Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "资金流向" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "DataKLine", Filter: { ContentType: "日线数据" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜" }, DB: sourceDB,   Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜明细" }, DB: sourceDB,  Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "资金流向" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
         sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "首页概览" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
   
           
@@ -178,6 +178,11 @@ var THS = {
             else if ("DataStock" === pagerInfo.CollectionName && "资金流向" === pagerInfo.Filter.ContentType) {
                 THSDataAnalyseV2.LoadDataSource("资金流向", dbItem);
             }
+            else if ("DataStock" === pagerInfo.CollectionName && "首页概览" === pagerInfo.Filter.ContentType) {
+                THSDataAnalyseV2.LoadDataSource("首页概览", dbItem);
+            }
+
+
   
             if (true === pagerInfo.IsLastPage && true === isLastItem) { ///若是最后一页的最后一个项目
                 if (0 < sourceArray.length) { 
@@ -308,11 +313,11 @@ var THS = {
     },
 
     Run: function () {
-        //THS.Task.push(THS.TraversePager_PageV2);
-        //THS.Task.push(THS.TraversePager_Data);
-        //THS.Task.push(THS.TraversePager_MutilDTo2D);
-        THS.Task.push(THS.TraversePager_PageSINA);
-        THS.ExcuteNextTask();
+        //THS.Task.push(THS.TraversePager_PageV2);///页面数据抽取
+        THS.Task.push(THS.TraversePager_Data);///数据分析
+        //THS.Task.push(THS.TraversePager_MutilDTo2D);///多维数据二维化
+        //THS.Task.push(THS.TraversePager_PageSINA);///新浪大单数据
+        THS.ExcuteNextTask();///执行下一步
     },
 
     ExcuteNextTask: function () {

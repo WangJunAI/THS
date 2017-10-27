@@ -26,11 +26,25 @@ var TOOLS = {
             return res;
         },
         ///字典转数组
-        DictToArray: function (dictData) {
+        DictToArray: function (dictData,callback) {
             var arr = [];
-            for (var item in dictData) {
+            for (var key in dictData) {
+                var item = {};
+                if (true === PARAM_CHECKER.IsString(dictData[key]) || true === PARAM_CHECKER.IsNumber(dictData[key]) || true === PARAM_CHECKER.IsDate(dictData[key])) {
+                    item[key] = dictData[key];
+                }
+                else if (true === PARAM_CHECKER.IsObject(dictData[key])) {
+                    item = dictData[key];
+                    item._DictKey = key;
+                }
 
+                if (true === PARAM_CHECKER.IsFunction(callback)) {
+                    item = callback(item);
+                }
+
+                arr.push(item);
             }
+            return arr;
         },
 
         ///数组转字典

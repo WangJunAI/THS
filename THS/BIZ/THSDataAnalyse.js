@@ -287,7 +287,18 @@ var THSDataAnalyse = {
 
         //THSDataAnalyse.DataOUT["券商参与维度分析"] = broker;
         THSDataAnalyse.DataOUT["券商参与维度分析"] = funds;
-    }
+    },
+
+    ///获取A股基本信息
+    GetMarketAInfo: function () {
+        var source = THSDataAnalyse.DataIN["首页概览"];
+        for (var k = 0; k < source.length; k++) {
+            var item = source[k];
+
+        }
+    },
+
+
 }
 
 
