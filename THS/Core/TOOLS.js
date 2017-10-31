@@ -162,21 +162,20 @@ var TOOLS = {
         }
     },
     Compare: {
-        NumberCompare: function (value,lower, upper, lowerEq, upperEq) {
-            if (PARAM_CHECKER.IsNumber(value)&&PARAM_CHECKER.IsNumber(lower) && PARAM_CHECKER.IsNumber(upper) && !PARAM_CHECKER.IsNumber(lowerEq) && !PARAM_CHECKER.IsNumber(upperEq) && lower < upper) {
-                return lower < value && value < upper;
+        Classify: function (value, option) {
+            var res = {};
+            for (var k = 0; k < option.length; k++) {
+                var item = option[k];
+                if (0 === k) {
+                    res[option.Name] = (value <= option.Value) ? 1 : 0;
+                }
+                else {
+                    res[option.Name] = (option[k - 1].Value <= value && value <= option.Value) ? 1 : 0;
+                }
             }
-            else if (PARAM_CHECKER.IsNumber(value) && PARAM_CHECKER.IsNumber(lower) && PARAM_CHECKER.IsNumber(upper) && !PARAM_CHECKER.IsNumber(lowerEq) && PARAM_CHECKER.IsNumber(upperEq) && lower <= upper) {
-                return lower < value && value <= upper;
-            }
-            else if (PARAM_CHECKER.IsNumber(value) && PARAM_CHECKER.IsNumber(lower) && PARAM_CHECKER.IsNumber(upper) && PARAM_CHECKER.IsNumber(lowerEq) && !PARAM_CHECKER.IsNumber(upperEq) && lower <= upper) {
-                return lower <= value && value < upper;
-            }
-            else if (PARAM_CHECKER.IsNumber(value) && PARAM_CHECKER.IsNumber(lower) && PARAM_CHECKER.IsNumber(upper) && PARAM_CHECKER.IsNumber(lowerEq) && PARAM_CHECKER.IsNumber(upperEq) && lower <= upper) {
-                return lower <= value && value <= upper;
-            }
-            throw "NumberCompare 比较方法出错 lower=" + lower + " value=" + value + " upper=" + upper + " lowerEq=" + lowerEq + " upperEq=" + upperEq;
+            return res;
         }
+
     },
     JSON: {
         ///获取属性数量
@@ -227,6 +226,12 @@ var TOOLS = {
             }
             array.push(item);
             return array;
+        },
+        Initial: function (input, defaultValue) {
+            if (undefined === input) {
+                input = defaultValue;
+            }
+            return input;
         }
     }
 

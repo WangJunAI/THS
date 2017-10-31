@@ -98,7 +98,6 @@ var THS = {
                             sourceArray.shift();///抛弃掉
                             if (0 < sourceArray.length) {
                                 ///若没有结束 开始处理第二个集合
-                                //var param2 = sourceArray.shift();
                                 var param2 = sourceArray.slice(0, 1)[0];
 
                                 sourceDB.FindProc(param2, callback, false);
@@ -138,15 +137,15 @@ var THS = {
         var targetCollectionName = THSDB.Mongo02Table.DataInterResult;
         var sourceArray = [];
 
-        //sourceArray.push({ CollectionName: "DataKLine", Filter: { ContentType: "日线数据" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
-        //sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜" }, DB: sourceDB,   Pager: { Index: 0, Size: 100 } });
-        //sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜明细" }, DB: sourceDB,  Pager: { Index: 0, Size: 100 } });
-        //sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "资金流向" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "首页概览" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        sourceArray.push({ CollectionName: "DataKLine", Filter: { ContentType: "日线数据"/*, StockCode:"603599"*/ }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜"/*, StockCode: "603599"*/ }, DB: sourceDB,   Pager: { Index: 0, Size: 100 } });
+        sourceArray.push({ CollectionName: "DataGGLHB", Filter: { ContentType: "个股龙虎榜明细"/*, StockCode: "603599"*/ }, DB: sourceDB,  Pager: { Index: 0, Size: 100 } });
+        sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "资金流向"/*, StockCode: "603599"*/  }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "DataStock", Filter: { ContentType: "首页概览" }, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
   
           
         var callback = function (dbItem, pagerInfo, isLastItem) {
-            console.log("TraversePager_DataV3 当前遍历位置 "+pagerInfo.CollectionName+" "+ pagerInfo.CurrentIndex + " " + pagerInfo.PageSize);
+            console.log("TraversePager_Data 当前遍历位置 "+pagerInfo.CollectionName+" "+ pagerInfo.CurrentIndex + " " + pagerInfo.PageSize);
             if ("DataKLine" === pagerInfo.CollectionName && "日线数据" === pagerInfo.Filter.ContentType) { 
                 THSDataAnalyseV2.LoadDataSource("日线数据", dbItem); ///加载日线数据，用于查找目标股票日K线
                 ///制作日线字典
@@ -176,10 +175,16 @@ var THS = {
                 }
             }
             else if ("DataStock" === pagerInfo.CollectionName && "资金流向" === pagerInfo.Filter.ContentType) {
-                THSDataAnalyseV2.LoadDataSource("资金流向", dbItem);
+                //THSDataAnalyseV2.LoadDataSource("资金流向", dbItem);
+                for (var k = 0; k < dbItem.Rows.length; k++) {
+                    var rowItem = dbItem.Rows[k];
+                    rowItem.Key = dbItem.StockCode + dbItem.StockName + rowItem.C1.toString();
+                    THSDataAnalyseV2.LoadDataSource("资金流向字典", rowItem, { AsDict: true, Keys: "Key" });
+                }
             }
             else if ("DataStock" === pagerInfo.CollectionName && "首页概览" === pagerInfo.Filter.ContentType) {
-                THSDataAnalyseV2.LoadDataSource("首页概览", dbItem);
+                //THSDataAnalyseV2.LoadDataSource("首页概览", dbItem);
+                THSDataAnalyseV2.LoadDataSource("首页概览字典", dbItem, { AsDict: true, Keys: "StockCode" });
             }
 
 
