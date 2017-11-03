@@ -183,7 +183,6 @@ var THS = {
                 }
             }
             else if ("DataStock" === pagerInfo.CollectionName && "首页概览" === pagerInfo.Filter.ContentType) {
-                //THSDataAnalyseV2.LoadDataSource("首页概览", dbItem);
                 THSDataAnalyseV2.LoadDataSource("首页概览字典", dbItem, { AsDict: true, Keys: "StockCode" });
             }
 

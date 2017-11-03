@@ -69,6 +69,12 @@
     <Compile Include="BIZ\WIKI.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="Core\APP.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="Core\APPCreator.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="Core\CallbackQueue.js">
       <SubType>Code</SubType>
     </Compile>

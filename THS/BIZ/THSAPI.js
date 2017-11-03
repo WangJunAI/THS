@@ -14,7 +14,7 @@ THSAPI.GetHotestYYB = function (context,callback) {
     var db = THSDB.GetMongo02();
     var sourceCollection = THSDB.Mongo02Table.DataGGLHB;
 
-    var filter = context.Args;//{ "ContentType": "个股龙虎榜明细", "Date": { $eq: "2017-10-24" } };//{ "ContentType": { $eq: "个股龙虎榜" }, "Data.0.C1": { $gt: new Date("2017/10/23 15:00:00") } };///获取指定交易日的
+    var filter = context.Args;
     var param = db.ParamCreator.EmptyFindProcParam();
     param.DB = db;
     param.CollectionName = sourceCollection;
@@ -38,6 +38,26 @@ THSAPI.GetHotestYYB = function (context,callback) {
     }
     db.Find(param,findEndCallback);
 
+}
+
+///获取高质量股票
+THSAPI.GetHighQualityStock = function (context, callback) {
+    var db = THSDB.GetMongo02();
+    var sourceCollection = THSDB.Mongo02Table.DataStock;
+
+    var filter = context.Args;
+    var param = db.ParamCreator.EmptyFindProcParam();
+    param.DB = db;
+    param.CollectionName = sourceCollection;
+    param.Filter = filter;
+    param.Pager.Size = 10000 * 10000;
+
+    var findEndCallback = function (dataArray, pagerInfo) {
+        ///获取到数据
+        var result = dataArray;
+        callback(result, pagerInfo);
+    }
+    db.Find(param, findEndCallback);
 }
 
 

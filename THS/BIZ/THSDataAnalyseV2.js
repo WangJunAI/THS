@@ -145,12 +145,14 @@ THSDataAnalyseV2.GetTargetStockByIncrease = function (increase) {
                     summaryDict["中单净占比"]["无数据"] += 1;
                     summaryDict["小单净占比"]["无数据"] += 1;
                 }
-                ///营业部计算
+
+                ///资金计算
                 for (var n = 0; n < dataItem.Prev5Funds.length; n++) {
                     var fundsItem = dataItem.Prev5Funds[n];
                     ///大单
                     if (0 < fundsItem.C7) {
                         summaryDict["大单净占比"]["正"] += 1;
+
                     }
                     else if (fundsItem.C7 <= 0) {
                         summaryDict["大单净占比"]["负"] += 1;
@@ -256,15 +258,11 @@ THSDataAnalyseV2.GetTargetStockFunds = function (klineInfo) {
 
 ///整体数据分析
 THSDataAnalyseV2.DataAnalyse = function () {
-    //THSDataAnalyseV2.GetSummaryInfo();
+    THSDataAnalyseV2.GetSummaryInfo();
      
 
     THSDataAnalyseV2.GetTargetStockByIncrease("5%"); ///获取目标股票
  
-
-    
-
-
 } 
 ///计算概要信息
 THSDataAnalyseV2.GetSummaryInfo = function () {
@@ -274,18 +272,18 @@ THSDataAnalyseV2.GetSummaryInfo = function () {
     }
 
     if (undefined === THSDataAnalyseV2.DataOUT["概念"]) {
-        THSDataAnalyseV2.DataOUT["概念"] = { };
+        THSDataAnalyseV2.DataOUT["概念"] = {};
     }
 
     if (undefined === THSDataAnalyseV2.DataOUT["业务"]) {
-        THSDataAnalyseV2.DataOUT["业务"] = { };
+        THSDataAnalyseV2.DataOUT["业务"] = {};
     }
     var target1 = THSDataAnalyseV2.DataOUT["区域"];
     var target2 = THSDataAnalyseV2.DataOUT["概念"];
     var target3 = THSDataAnalyseV2.DataOUT["业务"];
 
-    for (var m = 0; m < source.length; m++) {
-        var dbItem = source[m];
+    for (var srcKey in source) {
+        var dbItem = source[srcKey];
         var area = dbItem.Company.Value[0].trim();
         var conception = dbItem.Company.Value[1].trim().split(/[，、]/g);
         var biz = dbItem.Company.Value[3].trim().split(/[；、。，]/g);
@@ -318,13 +316,25 @@ THSDataAnalyseV2.GetSummaryInfo = function () {
     delete target3[""];
 
     ///字段转数组
-    target1 = TOOLS.Convertor.DictToArray(target1, function (item) { item.ContentType = "区域分析";  return item; });
-    target2 = TOOLS.Convertor.DictToArray(target2, function (item) {  item.ContentType = "概念分析";  return item; });
-    target3 = TOOLS.Convertor.DictToArray(target3, function (item) {  item.ContentType = "业务分析";   return item; });
+    target1 = TOOLS.Convertor.DictToArray(target1, function (item) { item.ContentType = "区域分析"; return item; });
+    target2 = TOOLS.Convertor.DictToArray(target2, function (item) { item.ContentType = "概念分析"; return item; });
+    target3 = TOOLS.Convertor.DictToArray(target3, function (item) { item.ContentType = "业务分析"; return item; });
     THSDataAnalyseV2.DataOUT["区域"] = target1;
     THSDataAnalyseV2.DataOUT["概念"] = target2;
     THSDataAnalyseV2.DataOUT["业务"] = target3;
 
+},
+
+
+///获取优质股票
+THSDataAnalyseV2.GetHighQualityStock == function () {
+    var source = THSDataAnalyseV2.DataIN["首页概览字典"];
+    var targetArray = [];
+    for (var srcKey in source) {
+        var srcItem = source[srcKey];
+        if (50 <= srcItem.Company.Value[8]) {
+        }
+    }
 }
 
 
