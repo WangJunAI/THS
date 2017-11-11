@@ -78,15 +78,15 @@ var TOOLS = {
         ///单位转换出错
         UnitToNumber: function (input) {
             input = input.replace("元", "").replace("股", "").replace("，", "");
-            if (PARAM_CHECKER.Contains("万", input)) {
+            if (true === PARAM_CHECKER.Contains("万", input)) {
                 var res = Number(input.replace("万", "")) * 10000;
                 return res;
             }
-            else if (PARAM_CHECKER.Contains("亿", input)) {
+            else if (true === PARAM_CHECKER.Contains("亿", input)) {
                 var res = Number(input.replace("亿", "")) * 10000 * 10000;
                 return res;
             }
-            else if (PARAM_CHECKER.IsNumber(input)) {
+            else if (true === PARAM_CHECKER.IsNumber(input)) {
                 return Number(input);
             }
             throw "单位转换出错 " + "UnitToNumber";

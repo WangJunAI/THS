@@ -84,18 +84,12 @@ THSDataAnalyseV2.CalAmplitude = function (current, prev) {
 ///获取目标股票日线
 THSDataAnalyseV2.GetTargetStockByIncrease = function (increase) {
     
-
     var targetInc = TOOLS.Convertor.PercentToNumber(increase); ///目标股票涨幅
     var source = THSDataAnalyseV2.DataIN["日线数据"];
  
     var targetStockArray = [];
     var contentType = "涨幅在" + targetInc * 100 + "%以上的股票日线信号"; 
-
-    ////
-    ///计算汇总
-    ///涉及的营业部，前5日的涨跌幅，前五日资金和前一天的比值，成交量的比值
-    var summaryDict = { "营业部": { "买涨": 0, "买跌": 0, "未参与": 0 }, "大单净占比": { "正": 0, "负": 0, "无数据": 0 }, "中单净占比": { "正": 0, "负": 0, "无数据": 0 }, "小单净占比": { "正": 0, "负": 0, "无数据": 0  } };
-    ////
+     
 
     for (var q = 0; q < source.length; q++) {
         var sourceItem = source[q];
@@ -104,86 +98,137 @@ THSDataAnalyseV2.GetTargetStockByIncrease = function (increase) {
         for (var k = 1; k < dataArray.length; k++) {
             var dataItem = dataArray[k];
             var itemInc = THSDataAnalyseV2.CalIncrease(dataItem, dataArray[k - 1]);///涨幅
-            if (targetInc <= itemInc && 20170925<=dataItem.Date ///一个月以内
+            ///添加额外信息
+            dataItem.StockCode = sourceItem.StockCode;
+            dataItem.StockName = sourceItem.StockName;
+            dataItem.ContentType = contentType;
+            dataItem.Increase = itemInc;///实际涨幅
+            dataItem["涨幅"] = itemInc * 100 + "%";
+            dataItem["成交均价"] = dataItem.Turnover / dataItem.Volume;
+            dataItem.Amplitude = THSDataAnalyseV2.CalAmplitude(dataItem, dataArray[k - 1]);///振幅
+            dataItem.Prev5KLine = THSDataAnalyseV2.GetTargetStockPrev5KLine(dataItem, dataArray); ///前5日K线信号
+            dataItem.Prev5LHBMX = THSDataAnalyseV2.GetTargetStockLHB(dataItem.Prev5KLine); ///前5日LHB明细
+            dataItem.Prev5Funds = THSDataAnalyseV2.GetTargetStockFunds(dataItem.Prev5KLine);///前5日资金流信息
+
+            ///计算
+            THSDataAnalyseV2["个股一月内上涨次数分布"](dataItem);
+
+
+            if (targetInc <= itemInc && 20170925 <= dataItem.Date ///一个月以内
                 && parseInt(sourceItem.start) <= parseInt((new Date().getFullYear() - 1).toString() + (new Date().getMonth() + 1).toString() + (new Date().getDate().toString()))) { ///上市日期一年以上
-                ///添加额外信息
-                dataItem.StockCode = sourceItem.StockCode;
-                dataItem.StockName = sourceItem.StockName;
-                dataItem.ContentType = contentType;
-                dataItem.Increase = itemInc;///实际涨幅
-                dataItem["涨幅"] = itemInc * 100 + "%";
-                dataItem["成交均价"] = dataItem.Turnover / dataItem.Volume;
-                dataItem.Amplitude = THSDataAnalyseV2.CalAmplitude(dataItem, dataArray[k - 1]);///振幅
                   
-                var prev5KLineArray = THSDataAnalyseV2.GetTargetStockPrev5KLine(dataItem, dataArray); ///前5日K线信号
-                 
-                dataItem.Prev5KLine = prev5KLineArray;
-                dataItem.Prev5LHBMX = THSDataAnalyseV2.GetTargetStockLHB(prev5KLineArray); ///前5日LHB明细
-                dataItem.Prev5Funds = THSDataAnalyseV2.GetTargetStockFunds(prev5KLineArray);///前5日资金流信息
+
  
-                targetStockArray.push(dataItem);
+                targetStockArray.push(dataItem); ///目标日线信号
 
-                /////营业部开始
-                if (0 === dataItem.Prev5LHBMX.length) { ///上涨5%但龙虎榜未参与
-                    summaryDict["营业部"]["未参与"] += 1;
-                }
-                ///营业部计算
-                for (var m = 0; m < dataItem.Prev5LHBMX.length; m++) {
-                    var lhbmxItem = dataItem.Prev5LHBMX[m];
-                    if (0 < lhbmxItem.C4 - lhbmxItem.C6) {
-                        summaryDict["营业部"]["买涨"] += 1;
-                    }
-                    else if (lhbmxItem.C4 - lhbmxItem.C6 <= 0) {
-                        summaryDict["营业部"]["买跌"] += 1;
-                    }  
-                }
-                /////营业部结束
-
-                /////资金流开始
-                if (0 === dataItem.Prev5Funds.length) { ///上涨5%但龙虎榜未参与
-                    summaryDict["大单净占比"]["无数据"] += 1;
-                    summaryDict["中单净占比"]["无数据"] += 1;
-                    summaryDict["小单净占比"]["无数据"] += 1;
-                }
-
-                ///资金计算
-                for (var n = 0; n < dataItem.Prev5Funds.length; n++) {
-                    var fundsItem = dataItem.Prev5Funds[n];
-                    ///大单
-                    if (0 < fundsItem.C7) {
-                        summaryDict["大单净占比"]["正"] += 1;
-
-                    }
-                    else if (fundsItem.C7 <= 0) {
-                        summaryDict["大单净占比"]["负"] += 1;
-                    }
-                    ///中单
-                    if (0 < fundsItem.C9) {
-                        summaryDict["中单净占比"]["正"] += 1;
-                    }
-                    else if (fundsItem.C9 <= 0) {
-                        summaryDict["中单净占比"]["负"] += 1;
-                    }
-                    ///小单
-                    if (0 < fundsItem.C11) {
-                        summaryDict["小单净占比"]["正"] += 1;
-                    }
-                    else if (fundsItem.C11 <= 0) {
-                        summaryDict["小单净占比"]["负"] += 1;
-                    }
-                }
-                /////资金流结束
-                
             }
+
         }
         
     }
 
-    summaryDict.ContentType = "全面统计";
-    THSDataAnalyseV2.DataOUT[contentType] = targetStockArray;
-    THSDataAnalyseV2.DataOUT["全面统计"] = summaryDict;
- 
+     THSDataAnalyseV2.DataOUT[contentType] = targetStockArray;
+     THSDataAnalyseV2["个股一月内上涨次数分布"](null, true);
 }
+
+///个股一月内上涨次数分布
+THSDataAnalyseV2["个股一月内上涨次数分布"] = function (dataItem,hasFinish) {
+
+    if (true === PARAM_CHECKER.IsObject(dataItem) && undefined === hasFinish) {
+        ///每个股 1-3% 3-6 6-10
+        var target = TOOLS.JSON.Initial(THSDataAnalyseV2.DataOUT["个股一月内上涨次数分布"], {});
+
+        if (undefined === target[dataItem.StockName]) {
+            target[dataItem.StockName] = TOOLS.JSON.Initial(target[dataItem.StockName], { "StockName": dataItem.StockName, "StockCode": dataItem.StockCode, "分布": { "下跌": 0, "3%以下": 0, "3%-7%": 0, "7%以上": 0 } });
+        }
+
+        if (dataItem.Increase <= 0) {
+            target[dataItem.StockName]["分布"]["下跌"] += 1;
+        }
+        else if (0 < dataItem.Increase && dataItem.Increase <= 0.03) {
+            target[dataItem.StockName]["分布"]["3%以下"] += 1;
+        }
+        else if (0.03 < dataItem.Increase && dataItem.Increase <= 0.07) {
+            target[dataItem.StockName]["分布"]["3%-7%"] += 1;
+        }
+        else if (0.07 < dataItem.Increase && dataItem.Increase < 0.11) {
+            target[dataItem.StockName]["分布"]["7%以上"] += 1;
+        }
+
+
+        THSDataAnalyseV2.DataOUT["个股一月内上涨次数分布"] = target;
+    }
+    else if (true === hasFinish) {
+        ///字典转数组
+        var srcObject = THSDataAnalyseV2.DataOUT["个股一月内上涨次数分布"];
+        var array = [];
+        for (var key in srcObject) {
+            var item = srcObject[key];
+            item.StockCode = key;
+            array.push(item);
+        }
+
+        THSDataAnalyseV2.DataOUT["个股一月内上涨次数分布"] = array;
+    }
+}
+
+
+THSDataAnalyseV2["连续上涨的概率"] = function (dataItem,hasFinish) {
+   ///前一天涨 前二天张 前三天张....
+   ///前一天 5%以下 .....
+    if (true === PARAM_CHECKER.IsObject(dataItem) && undefined === hasFinish) {
+        for (var k = 0; k < dataItem.length; k++) {
+
+        }
+    }
+    else if (true === hasFinish) {
+
+    }
+
+}
+
+THSDataAnalyseV2["营业部的成功率"] = function () {
+    var srcLHB = THSDataAnalyseV2.DataIN["个股龙虎榜"];
+    var target = TOOLS.JSON.Initial(THSDataAnalyseV2.DataOUT["营业部的成功率"], {});
+    for (var k = 0; k < srcLHB.length; k++) {
+        var srcLHBItem = srcLHB[k];
+        for (var m = 0; m < srcLHBItem.Data.length; m++) {
+            var dataItem = srcLHBItem.Data[m];
+            if (0.04 <= dataItem.C4 &&  dataItem.C4 <=0.09) {///若次日涨跌符合要求
+                var key = srcLHBItem.StockCode + srcLHBItem.StockName + dataItem.C1.toString();
+                var lhbmxItem = THSDataAnalyseV2.DataIN["个股龙虎榜明细"][key];
+                if (true === PARAM_CHECKER.IsObject(lhbmxItem)) {
+                    target[lhbmxItem.C2] = TOOLS.JSON.Initial(target[lhbmxItem.C2], { "买涨": 0, "买跌": 0 });
+                    target[lhbmxItem.C2]["买涨"] += (0 < (lhbmxItem.C4 - lhbmxItem.C6)) ? 1 : 0;
+                    target[lhbmxItem.C2]["买跌"] += ( (lhbmxItem.C4 - lhbmxItem.C6) <0) ? 1 : 0;
+                }
+            }
+        }
+    }
+
+    target.ContentType = "涨幅4%-9%营业部的成功率";
+    THSDataAnalyseV2.DataOUT["营业部的成功率"] = target;
+
+}
+
+THSDataAnalyseV2["资金大中小单占比上涨的概率"] = function () {
+
+}
+
+THSDataAnalyseV2["大单活跃度次日上涨的概率"] = function () {
+
+}
+
+THSDataAnalyseV2["优质股上涨的概率"] = function () {
+
+}
+
+THSDataAnalyseV2["指标命中上涨分布"] = function () {
+
+}
+
+
+
 
 ///获取目标股票前5天的K线图
 THSDataAnalyseV2.GetTargetStockPrev5KLine = function (targetItem, klineArray) {
@@ -254,14 +299,30 @@ THSDataAnalyseV2.GetTargetStockFunds = function (klineInfo) {
         return sourceItem;
     }
 }
- 
+
+ ///获取优质股票
+THSDataAnalyseV2.GetHighQualityStock = function () {
+    var source = THSDataAnalyseV2.DataIN["优质股字典"];
+    var target = [];
+    for (var key in source) {
+        var item = source[key];
+        item.ContentType = "优质股";
+        target.push(item);
+    }
+
+
+
+    var length = target.length;
+    THSDataAnalyseV2.DataOUT["优质股"] = target;
+}
+
 
 ///整体数据分析
 THSDataAnalyseV2.DataAnalyse = function () {
     THSDataAnalyseV2.GetSummaryInfo();
-     
-
-    THSDataAnalyseV2.GetTargetStockByIncrease("5%"); ///获取目标股票
+    THSDataAnalyseV2.GetHighQualityStock();
+    THSDataAnalyseV2["营业部的成功率"]();
+    //THSDataAnalyseV2.GetTargetStockByIncrease("5%"); ///获取目标股票
  
 } 
 ///计算概要信息
@@ -326,16 +387,6 @@ THSDataAnalyseV2.GetSummaryInfo = function () {
 },
 
 
-///获取优质股票
-THSDataAnalyseV2.GetHighQualityStock == function () {
-    var source = THSDataAnalyseV2.DataIN["首页概览字典"];
-    var targetArray = [];
-    for (var srcKey in source) {
-        var srcItem = source[srcKey];
-        if (50 <= srcItem.Company.Value[8]) {
-        }
-    }
-}
 
 
 

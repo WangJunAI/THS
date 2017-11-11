@@ -76,6 +76,19 @@ var THSPageKLine = {
 
         return item;
     },
+
+    ///生成
+    ConvertTo2D: function (dbItem) {
+        var array = [];
+        for (var k = 0; k < dbItem.Data.length; k++) {
+            var item = dbItem.Data[k];
+            item.StockCode = dbItem.StockCode;
+            item.StockName = dbItem.StockName;
+            array.push(item);
+        }
+
+        return array;
+    }
 }
 
 

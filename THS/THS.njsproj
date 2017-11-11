@@ -29,7 +29,13 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="app.js" />
+    <Compile Include="BIZ\JRJPageAnalyse.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="BIZ\NEWS.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BIZ\SINAPageAnalyse.js">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BIZ\THS.js">

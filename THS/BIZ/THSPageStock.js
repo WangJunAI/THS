@@ -18,32 +18,23 @@ var THSPageStock = {
 
         ///公司概况
         var $company_details = $($page.find(".company_details"));
-        var company = { Key: [], Value: [] }; ///Key是结构 Value是值
-        var dt_dd = $company_details.children();
-        for (var i = 0; i < dt_dd.length; i++) {
-            if (true === $(dt_dd[i]).is("dt")) {
-                company.Key.push($(dt_dd[i]).text().replace('：', ''));
-            }
-            else if (true === $(dt_dd[i]).is("dd")) {
-                var dd = $(dt_dd[i]).text();
-                if ("string" === typeof ($(dt_dd[i]).attr("title")) && 0 < $(dt_dd[i]).attr("title").length) {
-                    dd = $(dt_dd[i]).attr("title");///获取完整字符串
-                }
-                else {
-                    dd = dd.replace('元', '').replace('亿', '').replace('%', '');
-                    if (false === isNaN(dd)) {
-                        ///如果是数字
-                        dd = Number(dd);
-                    }
-                    else if (false === isNaN(Date.parse(dd))) {
-                        ///若转换日期成功
-                        dd = TOOLS.Convertor.ToDate(dd);
-                    }
+        var company = {   }
+        var dd = $company_details.find("dd");
+        company["所属地域"] = $(dd[0]).text().trim();
+        company["涉及概念"] = $(dd[1]).attr("title").trim();
+        company["主营业务"] = $(dd[3]).attr("title").trim();
+        company["上市日期"] = new Date($(dd[4]).text().replace("-","/"));
+        company["每股净资产"] = TOOLS.Convertor.UnitToNumber($(dd[5]).text());
+        company["每股收益"] = TOOLS.Convertor.UnitToNumber($(dd[6]).text());
+        company["净利润"] = TOOLS.Convertor.UnitToNumber($(dd[7]).text());
+        company["净利润增长率"] = TOOLS.Convertor.PercentToNumber($(dd[8]).text());
+        company["营业收入"] = TOOLS.Convertor.UnitToNumber($(dd[9]).text());
+        company["每股现金流"] = TOOLS.Convertor.UnitToNumber($(dd[10]).text());
+        company["每股公积金"] = TOOLS.Convertor.UnitToNumber($(dd[11]).text());
+        company["每股未分配利润"] = TOOLS.Convertor.UnitToNumber($(dd[12]).text());
+        company["总股本"] = TOOLS.Convertor.UnitToNumber($(dd[13]).text());
+        company["流通股"] = TOOLS.Convertor.UnitToNumber($(dd[14]).text());
 
-                }
-                company.Value.push(dd);
-            }
-        }
 
         ///公司新闻
         var gsxwLiArray = $page.find("[stat='f10_spqk_gsxw'] li");
@@ -56,7 +47,7 @@ var THSPageStock = {
             var item = {
                 Text: text,
                 Href: href,
-                Date: TOOLS.Convertor.ToDate("2017-" + date),
+                Date: TOOLS.Convertor.ToDate(new Date().getFullYear() + date),
             };
 
             gsxw.push(item);
@@ -209,11 +200,11 @@ var THSPageStock = {
                 var proportionTotalS = $(tdArray[4]).text();///占总成交比例	
                 var lhbItem1 = {
                     Href: href,
-                    YYBName: yybName,
-                    MRJE: Number(purchaseAmount),
-                    MRBL: Number(proportionTotalP.replace('%', '')),
-                    MCJE: Number(salesAmount),
-                    MCBL: Number(proportionTotalS.replace('%', ''))
+                    "营业部名称": yybName,
+                    "买入金额": Number(purchaseAmount),
+                    "买入占总成交比例": Number(proportionTotalP.replace('%', '')),
+                    "卖出金额": Number(salesAmount),
+                    "卖出占总成交比例": Number(proportionTotalS.replace('%', ''))
                 };
                 lhbToday.push(lhbItem1);
             }
@@ -243,11 +234,11 @@ var THSPageStock = {
                 var proportionTotalS = $(tdArray[4]).text();///占总成交比例	
                 var lhbItem2 = {
                     Href: href,
-                    YYBName: yybName,
-                    MRJE: Number(purchaseAmount),
-                    MRBL: Number(proportionTotalP.replace('%', '')),
-                    MCJE: Number(salesAmount),
-                    MCBL: Number(proportionTotalS.replace('%', '')),
+                    "营业部名称": yybName,
+                    "买入金额": Number(purchaseAmount),
+                    "买入占总成交比例": Number(proportionTotalP.replace('%', '')),
+                    "卖出金额": Number(salesAmount),
+                    "卖出占总成交比例": Number(proportionTotalS.replace('%', '')),
                 };
 
                 lhbYesterday.push(lhbItem1);
@@ -256,14 +247,14 @@ var THSPageStock = {
 
 
         home = {
-            Company: company, ///公司概况
-            GSXW: gsxw,///公司新闻
-            GSGG: gsgg,///公司公告
-            HYZX: hyzx,///行业资讯
-            YJBG: yjbg,///研究报告
-            DZJY: dzjy,///大宗交易
-            RZRQ: rzrq,///融资融券
-            LHB: {///龙虎榜
+            "公司概况": company, ///公司概况
+            "公司新闻": gsxw,///公司新闻
+            "公司公告": gsgg,///公司公告
+            "行业资讯": hyzx,///行业资讯
+            "研究报告": yjbg,///研究报告
+            "大宗交易": dzjy,///大宗交易
+            "融资融券": rzrq,///融资融券
+            "龙虎榜": {///龙虎榜
                 Today: lhbToday,
                 Yesterday: lhbYesterday,
                 TodayCal: lhbTodayCal,
@@ -280,17 +271,7 @@ var THSPageStock = {
                 LHB: { Name: "龙虎榜", Column: { Href: "营业部链接", YYBName: "营业部名称", MRJE: "买入金额", MRBL: "买入金额占总成交比例", MCJE: "卖出金额", MCBL: "卖出金额占总成交比例" }, Cal: { MRZJ: "买入总计", MCZJ: "卖出总计", MMJC: "买卖净差" } },
             }
         };
-
-        if (0 < home.DZJY.length) {
-            var q = 0;
-        }
-        if (0 < home.RZRQ.length) {
-            var q = 0;
-        }
-        if (0 < home.LHB.Today.length) {
-            var q = 0;
-        }
-
+          
         return home;
 
         // console.log($(company_details).html()); ///这个会有编码问题

@@ -16,7 +16,7 @@ var MongoDB = {
         }
         return ret();
     },
-    
+
     QueneIN: [],
     QueneRemove: [], ///移除队列
     QueneOUT: [],
@@ -24,7 +24,7 @@ var MongoDB = {
     QueueLog: [],
     Status: 0,
     CallBack: {
-        QueueSaveCallBack:null
+        QueueSaveCallBack: null
     },
 
     ///获取
@@ -40,32 +40,32 @@ var MongoDB = {
         for (key in MongoDB) {
             newInstance[key] = MongoDB[key];
         }
-        
-        
+
+
         if (PARAM_CHECKER.IsObject(option)) {
             newInstance._url = option.url;
         }
         else if (PARAM_CHECKER.IsNotEmptyString(option)) {
-            newInstance._url = (PARAM_CHECKER.Contains('/', option))?option:"mongodb://192.168.0.140:27017/" + option;
+            newInstance._url = (PARAM_CHECKER.Contains('/', option)) ? option : "mongodb://192.168.0.140:27017/" + option;
         }
 
         return newInstance;
     },
-    
+
     GetStatus: function () {
         setInterval(function () {
             console.log("Status-" + MongoDB.QueneIN.length + " - " + MongoDB.Status);
         }, 1000);
     },
-    
+
     ///保存一个对象
-    Save: function (collectionName , jsonData, callback, retryCount) {
+    Save: function (collectionName, jsonData, callback, retryCount) {
         var item = {
             collectionName: collectionName,
             jsonData: jsonData,
             callback: callback,
             retryCount: retryCount
-        }; 
+        };
 
         _THIS = this;
 
@@ -75,13 +75,13 @@ var MongoDB = {
             _THIS._Save();
         }
     },
-    
+
     ///保存一个对象
     _Save: function () {
         var _THIS = this;
         _THIS.Status = 1; ///占用状态
         console.log("Url" + _THIS._url + "  保存队列深度-" + _THIS.QueneIN.length);
-         
+
         mongo.connect(_THIS._url, function (connectionErr, db) {
             if ((null === connectionErr || undefined === connectionErr) && null != db) {
                 ///若打开成功
@@ -93,23 +93,23 @@ var MongoDB = {
                     var jsonData = queueItem.jsonData;
                     var callback = queueItem.callback;
                     var retryCount = queueItem.retryCount;
-                    
- 
+
+
                     if (!PARAM_CHECKER.IsValid(jsonData.CreateTime)) {
                         ///设置创建时间
                         jsonData.CreateTime = new Date();
                     }
-                    
+
                     if (!PARAM_CHECKER.IsValid(jsonData.UpdateTime)) {
                         ///设置更新时间
                         jsonData.UpdateTime = new Date();
                     }
-                    
+
                     if (!PARAM_CHECKER.IsValid(jsonData.ItemStatus)) {
                         ///设置实体状态
                         jsonData.ItemStatus = SYS.CONST.STATUS.Enable; ///表示启用
                     }
-                    
+
                     if (PARAM_CHECKER.IsNotEmptyString(jsonData._id)) {
                         var _id = new mongo.ObjectID(jsonData._id);
                         jsonData._id = _id;
@@ -119,7 +119,7 @@ var MongoDB = {
                     }
                     var objectLength = JSON.stringify(jsonData).length;
                     console.log("准备保存的对象的大小 " + objectLength);
-                    if (objectLength <= 1024 * 1024 * 10) {///效益10M
+                    if (objectLength <= 1024 * 1024 * 10) {///小于10M
                         db.collection(collectionName).findOneAndUpdate({ _id: jsonData._id }, { $set: jsonData }, { upsert: true }, function (saveErr, result) {
                             db.close();
 
@@ -151,25 +151,25 @@ var MongoDB = {
                 }
                 else {
                     _THIS.Status = 0;
-                    
+
                     try {
-                            db.close();
+                        db.close();
                     }
                     catch (closeErr) {
                         //_THIS.QueueLog.push(closeErr);
                         console.log(closeErr);
                         throw closeErr;
                     }
- 
-                    console.log(_THIS._url +" 队列已空 " + " - " + _THIS.Status+"  "+ _THIS.QueneIN.length);
- 
+
+                    console.log(_THIS._url + " 队列已空 " + " - " + _THIS.Status + "  " + _THIS.QueneIN.length);
+
                     if (PARAM_CHECKER.IsFunction(_THIS.CallBack.QueueSaveCallBack)) {
                         _THIS.CallBack.QueueSaveCallBack(_THIS.QueneIN.length);
                     }
- 
+
                 }
             }
-            else if (null != db && "function" === typeof(db.close)){
+            else if (null != db && "function" === typeof (db.close)) {
                 _THIS.Status = 0;
                 try {
                     db.close();
@@ -182,10 +182,10 @@ var MongoDB = {
             }
         });
     },
-     
-    
+
+
     ///移除一个对象
-    Remove: function (collectionName , jsonData, callback, retryCount) {
+    Remove: function (collectionName, jsonData, callback, retryCount) {
         var item = {
             collectionName: collectionName,
             jsonData: jsonData,
@@ -195,15 +195,15 @@ var MongoDB = {
 
         _THIS = this;
         _THIS.QueneRemove.push(item);
-        
+
         if (0 < _THIS.QueneRemove.length && 0 == _THIS.Status) {
             _THIS._Remove();
         }
     },
-    
+
     ///移除一个对象
     _Remove: function () {
- 
+
         var _THIS = this;
         _THIS.Status = 1; ///占用状态
 
@@ -222,7 +222,7 @@ var MongoDB = {
                         var _id = new mongo.ObjectID(jsonData._id);
                         jsonData._id = _id;
                     }
-                    
+
                     db.collection(collectionName).remove({ _id: jsonData._id }, function (err, result) {
                         db.close();
                         if (null === err) {
@@ -232,12 +232,12 @@ var MongoDB = {
                             _THIS.Status = 0;
                             console.log("删除失败-" + _THIS.QueneRemove.length + "-" + JSON.stringify(err));
                         }
-                        
+
                         if (PARAM_CHECKER.IsFunction(callback)) {
                             ///若是有回调
                             callback(err, result, _THIS.QueneRemove.length);
                         }
-                        
+
                         _THIS._Remove();
                     });
                 }
@@ -267,18 +267,18 @@ var MongoDB = {
             }
         });
     },
- 
+
 
     CreateEmptyFilter: function () {
         var json = {};
 
 
     },
- 
+
 
     ///执行特定的命令
-    Execute: function () { 
-    
+    Execute: function () {
+
     },
 
     ///查找
@@ -322,9 +322,9 @@ var MongoDB = {
 
                 cursor.on("data", function (data) {
                     dataArray.push(data);
-                    console.log("MongoDB 正在获取 " + collectionName+" 第" + dataArray.length + "个数据 " + "所在分页 " + pageIndex + " 分页大小 " + pageSize);
+                    console.log("MongoDB 正在获取 " + collectionName + " 第" + dataArray.length + "个数据 " + "所在分页 " + pageIndex + " 分页大小 " + pageSize);
                 });
-                 
+
                 cursor.on("end", function (data) {
                     if (PARAM_CHECKER.IsFunction(callbackEnd)) {
                         // Assuming DB has an open connection...
@@ -363,7 +363,7 @@ var MongoDB = {
         }
     },
     ///找到后处理
-    FindProc: function (source,callback, needTraverse) {
+    FindProc: function (source, callback, needTraverse) {
         var sourceDB = source.DB;///源数据库
         var sourceCollectionName = source.CollectionName;
         var sourceFilter = source.Filter;
@@ -379,22 +379,29 @@ var MongoDB = {
         var callbackFind = function (pagerInfo) {
             ///获取一页数据以后
             var dataArray = pagerInfo.DataArray;
-            while (0 < dataArray.length) {
-                var qItem = dataArray.pop();
-                if (true === PARAM_CHECKER.IsFunction(callback)) {
-                    var isLastItem = (0 === dataArray.length);///判断是否是最后一个元素
-                    pagerInfo.IsLastItem = isLastItem;
-                    callback(qItem,pagerInfo,isLastItem); ///业务处理
-                }
-            }
-            if (true === needTraverse && false === pagerInfo.IsLastPage) {
-                sourceDB.TraversePager(sourceCollectionName, sourceFilter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackError);
+
+            if (true === PARAM_CHECKER.IsFunction(callback) && (0 === dataArray.length)) { ///若没有数据
+                pagerInfo.IsEmpty = true;
+                callback(qItem, pagerInfo); ///业务处理
             }
             else {
-                console.log("FindProc "+sourceCollectionName+" 遍历全部完毕");
+                while (0 < dataArray.length) {
+                    var qItem = dataArray.shift();
+                    if (true === PARAM_CHECKER.IsFunction(callback)) {
+                        var isLastItem = (0 === dataArray.length);///判断是否是最后一个元素
+                        pagerInfo.IsLastItem = isLastItem;
+                        callback(qItem, pagerInfo, isLastItem); ///业务处理
+                    }
+                }
+                if (true === needTraverse && false === pagerInfo.IsLastPage) {
+                    sourceDB.TraversePager(sourceCollectionName, sourceFilter, pagerInfo.NextIndex, pagerInfo.PageSize, callbackFind, callbackError);
+                }
+                else {
+                    console.log("FindProc " + sourceCollectionName + " 遍历全部完毕");
+                }
             }
         }
-        
+
         ///开始循环遍历
         sourceDB.TraversePager(sourceCollectionName, sourceFilter, sourcePageIndex, sourcePageSize, callbackFind, callbackError);
     },
@@ -409,7 +416,12 @@ var MongoDB = {
             }
         }
         _THIS.FindProc(source, callbacItem, false);
-        
+
+    },
+
+    ///移动集合
+    MoveCollection: function (sourceDB, TargetDB) {
+
     }
 
 }
