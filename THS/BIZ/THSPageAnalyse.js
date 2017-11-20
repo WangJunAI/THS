@@ -1,6 +1,7 @@
 ﻿var THSPageKLine = require("../BIZ/THSPageKLine");
 var THSPageLHB = require("../BIZ/THSPageLHB");
 var THSPageStock = require("../BIZ/THSPageStock");
+var SINAPageAnalyse = require("../BIZ/SINAPageAnalyse");
 
 ///同花顺页面分析
 var THSPageAnalyse = {
@@ -37,8 +38,8 @@ var THSPageAnalyse = {
         else if ("首页概览" === dbItem.ContentType) {
             data = THSPageStock.GetDataFromPageV2(dbItem);
         }
-        else if ("" === dbItem.ContentType) {
-
+        else if ("SINA日线数据" === dbItem.ContentType) {
+            data = SINAPageAnalyse.GetDataFromPage(dbItem);
         }
 
         ///降低维度

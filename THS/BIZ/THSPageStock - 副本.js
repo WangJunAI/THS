@@ -1067,7 +1067,32 @@ var THSPageStock = {
             return;
         }
     },
- 
+
+    GetDataFromPage: function (dbItem) {
+        var res = {};
+        res.Home = THSPageStock.AnalysePageHome(dbItem); //获取首页概览数据
+        res.Funds = THSPageStock.AnalysePageFunds(dbItem); //获取首页概览数据
+        res.Company = THSPageStock.AnalysePageCompany(dbItem); //获取公司资料数据
+        res.News = THSPageStock.AnalysePageNews(dbItem); //获取新闻公告数据
+        res.Finance = THSPageStock.AnalysePageFinance(dbItem); //获取财务分析数据
+        res.Operate = THSPageStock.AnalysePageOperate(dbItem); //获取经营分析数据
+        res.Holder = THSPageStock.AnalysePageHolder(dbItem); //获取股东股本数据
+        res.Position = THSPageStock.AnalysePagePosition(dbItem); //获取主力持仓数据
+        res.Event = THSPageStock.AnalysePageEvent(dbItem); //获取公司大事数据
+        res.Bonus = THSPageStock.AnalysePageBonus(dbItem); //获取分红融资数据
+        res.Worth = THSPageStock.AnalysePageWorth(dbItem); //获取价值分析数据
+        res.Field = THSPageStock.AnalysePageField(dbItem); //获取行业分析数据
+
+        for (var key in res) {
+            if (!PARAM_CHECKER.IsValid(res[key])) {
+                ///若属性不可用,则删除
+                delete res[key];
+            }
+        }
+        console.log(" 正在提取数据 "+ dbItem.Page.substring(0,30)+"....");
+        return res;
+    },
+
     ///从页面提取数据
     GetDataFromPageV2: function (dbItem) {
         var res = {};

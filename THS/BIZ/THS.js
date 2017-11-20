@@ -3,19 +3,13 @@ var PARAM_CHECKER = require("../Core/PARAM_CHECKER");
 var TOOLS = require("../Core/TOOLS")
 var THSDB = require("../BIZ/THSDB");
 var THSPageFundsTracking = require("../BIZ/THSPageFundsTracking");
-var MemQueue = require("../Core/MemQueue");
 var DataTools = require("../Core/DataTools");
 var THSPageStock = require("../BIZ/THSPageStock");
 var THSPageKLine = require("../BIZ/THSPageKLine");
 var THSLHB = require("../BIZ/THSLHB");
-var THSDataAnalyse = require("../BIZ/THSDataAnalyse");
-var THSPageAnalyse = require("../BIZ/THSPageAnalyse");
-var THSDataAnalyseV2 = require("../BIZ/THSDataAnalyseV2");
-var THSMonitor = require("../BIZ/THSMonitor");
 var $ = require('cheerio');
-var WJMutilTask = require("../Core/WJMutilTask");
 var SINAPageAnalyse = require("../BIZ/SINAPageAnalyse");
- 
+var THSPageAnalyse = require("../BIZ/THSPageAnalyse");
 ///同花顺业务处理
 var THS = {
     Task:[],
@@ -23,13 +17,13 @@ var THS = {
     TraversePager_Page: function () {
 
         var sourceDB = THSDB.GetMongo("PageSource");
-        var targetDB = THSDB.GetMongo("DataSourceTest");
-        var targetCollectionMap = { "PageGGLHB": "DataGGLHB", "PageStock": "DataStock" };
+        var targetDB = THSDB.GetMongo("DataSource");
+        var targetCollectionMap = { "PageKLine": "DataKLine", "PageGGLHB": "DataGGLHB", "PageStock": "DataStock" };
         var sourceArray = [];
 
         sourceArray.push({ CollectionName: "PageKLine", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "PageGGLHB", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
-        sourceArray.push({ CollectionName: "PageStock", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "PageGGLHB", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
+        //sourceArray.push({ CollectionName: "PageStock", Filter: {}, DB: sourceDB, Pager: { Index: 0, Size: 100 } });
 
 
         var callback = function (dbItem, pagerInfo, isLastItem) {
