@@ -1,8 +1,9 @@
 ﻿var THSPageKLine = require("../BIZ/THSPageKLine");
 var THSPageLHB = require("../BIZ/THSPageLHB");
 var THSPageStock = require("../BIZ/THSPageStock");
+var THSPageNews = require("../BIZ/THSPageNews");
 var SINAPageAnalyse = require("../BIZ/SINAPageAnalyse");
-
+var mongo = require('mongodb');
 ///同花顺页面分析
 var THSPageAnalyse = {
 
@@ -38,10 +39,19 @@ var THSPageAnalyse = {
         else if ("首页概览" === dbItem.ContentType) {
             data = THSPageStock.GetDataFromPageV2(dbItem);
         }
-        else if ("SINA日线数据" === dbItem.ContentType) {
+        else if ("SINA个股历史交易" === dbItem.ContentType) {
             data = SINAPageAnalyse.GetDataFromPage(dbItem);
         }
-
+        else if ("大单追踪实时数据" === dbItem.ContentType)
+        {
+            data = SINAPageAnalyse.GetDataFromPage(dbItem);
+        }
+        else if ("THS财经要闻新闻列表" === dbItem.ContentType) {
+            data = THSPageNews.GetNewsList(dbItem);
+        }
+        else if ("THS财经要闻新闻详细" === dbItem.ContentType) {
+            data = THSPageNews.GetNewsDetail(dbItem);
+        }
         ///降低维度
         for (var key in data) {
             if (undefined == res[key]) {

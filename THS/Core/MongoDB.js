@@ -4,18 +4,9 @@ var mongo = require('mongodb');
 var fs = require('fs');
 ///MongoDB数据库操作器
 var MongoDB = {
-    _url: "mongodb://192.168.0.130:27017/WYGeQu",
-    checker: require('./PARAM_CHECKER.js'),
-    GetLoader: function () {
-        var loader = null;
-        var ret = function () {
-            if (null == loader) {
-                loader = require('./ModuleLoader.js');
-            }
-            return loader;
-        }
-        return ret();
-    },
+    _url: "MongoDB的Url",
+
+    DB: {},
 
     QueneIN: [],
     QueneRemove: [], ///移除队列
@@ -27,6 +18,17 @@ var MongoDB = {
         QueueSaveCallBack: null
     },
 
+    ///注册DB
+    Register: function (keyName,ip,port,dbName) {
+        var opt = MongoDB.GetEmptyOption();
+        opt.url = "mongodb://" + ip + ":" + port + "/" + dbName;
+        var db = MongoDB.GetInst(dbName, opt);
+        MongoDB.DB[keyName] = db;
+    },
+
+    GetDB: function (keyName) {
+        return MongoDB.DB[keyName];
+    },
     ///获取
     GetEmptyOption: function () {
         var option = {};
@@ -40,13 +42,9 @@ var MongoDB = {
         for (key in MongoDB) {
             newInstance[key] = MongoDB[key];
         }
-
-
+         
         if (PARAM_CHECKER.IsObject(option)) {
             newInstance._url = option.url;
-        }
-        else if (PARAM_CHECKER.IsNotEmptyString(option)) {
-            newInstance._url = (PARAM_CHECKER.Contains('/', option)) ? option : "mongodb://192.168.0.140:27017/" + option;
         }
 
         return newInstance;

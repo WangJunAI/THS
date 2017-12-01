@@ -8,14 +8,10 @@ SINAPageAnalyse.GetDataFromPage = function (dbItem) {
     var res = {ContentType:"未定义"};
     if ("大单追踪实时数据" === dbItem.ContentType) {
         res = {
-            ContentType: dbItem.ContentType,
-            MD5: dbItem.MD5,
-            TaskID: dbItem.TaskID,
-            Url: dbItem.Url,
-            Data: eval(dbItem.Page.replace(/\0/g, ''))
+            Rows: eval(dbItem.Page.replace(/\0/g, ''))
         }
     }
-    else if ("SINA日线数据" === dbItem.ContentType) {
+    else if ("SINA个股历史交易" === dbItem.ContentType) {
         res = SINAPageAnalyse.GetKLineFromPage(dbItem);
         res.JiDu = dbItem.JiDu;
         res.Year = dbItem.Year;
@@ -24,6 +20,7 @@ SINAPageAnalyse.GetDataFromPage = function (dbItem) {
     return res;
 } 
 
+///获取日线数据
 SINAPageAnalyse.GetKLineFromPage = function (dbItem) {
     var $page = $(dbItem.Page);
     var $table = $page.find("#FundHoldSharesTable");
@@ -59,5 +56,78 @@ SINAPageAnalyse.GetKLineFromPage = function (dbItem) {
     return res;
 
 }
+
+///获取融资融券信息
+///Url http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/rzrq/index.phtml?symbol=sz002230&bdate=2017-01-01&edate=2017-11-24
+SINAPageAnalyse.GetRZRQFromPage = function (dbItem) {
+    var $page = $(dbItem.Page);
+    var $table = $page.find("#dataTable");
+    var res = { Rows: [] };
+    var trArray = $table.find("tbody tr");
+    for (var k = 3; k < trArray.length;k++) {
+        var tdArray = $(trArray[k]).find("td");
+        var c1 = $(tdArray[0]).text().trim();//序号
+        var c2 = $(tdArray[1]).text().trim();//日期
+        var c3 = $(tdArray[2]).text().trim();//融资余额
+        var c4 = $(tdArray[3]).text().trim();///融资买入额
+        var c5 = $(tdArray[4]).text().trim();///融资偿还额
+        var c6 = $(tdArray[5]).text().trim();///融券余量金额	
+        var c7 = $(tdArray[6]).text().trim();///融券余量
+        var c8 = $(tdArray[7]).text().trim();///融券卖出量
+        var c9 = $(tdArray[8]).text().trim();///融券偿还量
+        var c10 = $(tdArray[9]).text().trim();///融券余额
+
+        var item = {};
+        item["序号"] = c1;
+        item["日期"] = c2;
+        item["融资余额"] = c3;
+        item["融资买入额"] = c4;
+        item["融资偿还额"] = c5;
+        item["融券余量金额"] = c6;
+        item["融券余量"] = c7;
+        item["融券卖出量"] = c8;
+        item["融券偿还量"] = c9;
+        item["融券余额"] = c10;
+        res.Rows.push(item);
+
+    }
+
+    return res;
+}
+
+///获取个股交易明细信息
+///http://vip.stock.finance.sina.com.cn/quotes_service/view/vMS_tradedetail.php?symbol=sh600048&date=2017-11-24&page=45
+SINAPageAnalyse.GetGGJYMX = function () {
+    var $page = $(dbItem.Page);
+    var $table = $page.find("#dataTable");
+    var res = { Rows: [] };
+    var trArray = $table.find("tbody tr");
+    for (var k = 3; k < trArray.length; k++) {
+        var tdArray = $(trArray[k]).find("td,th");
+        var c1 = $(tdArray[0]).text().trim();//成交时间
+        var c2 = $(tdArray[1]).text().trim();//成交价	
+        var c3 = $(tdArray[2]).text().trim();//涨跌幅
+        var c4 = $(tdArray[3]).text().trim();///价格变动
+        var c5 = $(tdArray[4]).text().trim();///成交量(手)	
+        var c6 = $(tdArray[5]).text().trim();///成交额(元)	
+        var c7 = $(tdArray[6]).text().trim();///性质
+
+        var item = {};
+        item["成交时间"] = c1;
+        item["成交价"] = c2;
+        item["涨跌幅"] = c3;
+        item["价格变动"] = c4;
+        item["成交量(手)"] = c5;
+        item["成交额(元)"] = c6;
+        item["性质"] = c7;
+        res.Rows.push(item);
+
+    }
+
+    return res;
+
+}
+
+
 
 module.exports = SINAPageAnalyse;

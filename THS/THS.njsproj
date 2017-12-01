@@ -38,6 +38,9 @@
     <Compile Include="BIZ\SINAPageAnalyse.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="BIZ\TaskAPI.js">
+      <SubType>Code</SubType>
+    </Compile>
     <Compile Include="BIZ\THS.js">
       <SubType>Code</SubType>
     </Compile>
@@ -60,6 +63,9 @@
     </Compile>
     <Compile Include="BIZ\THSPageFundsTracking.js" />
     <Compile Include="BIZ\THSPageKLine.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BIZ\THSPageNews.js">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BIZ\THSPageStock.js">

@@ -1,5 +1,7 @@
 ﻿var http = require("http");
 var querystring = require('querystring');
+var MongoDB = require("../Core/MongoDB");
+
 
 var dict = {};
 var CoreHttpService = {
@@ -14,6 +16,9 @@ var CoreHttpService = {
         "新浪": {
             RequirePath: "../BIZ/SINAAPI",
         },        
+        "系统任务": {
+            RequirePath: "../BIZ/TaskAPI",
+        },
 
         Load: function (name) {
             if (undefined === CoreHttpService.Service[name].Service) {
@@ -24,6 +29,12 @@ var CoreHttpService = {
     },
  
     Run: function () {
+
+        ///配置项注册
+        MongoDB.Register("140", "192.168.0.140", 27017, "StockTask");
+        MongoDB.Register("170", "192.168.0.170", 27017, "StockTask");
+
+        ///创建HTTP服务
         http.createServer(function (req, res) {
 
             //暂存请求体信息

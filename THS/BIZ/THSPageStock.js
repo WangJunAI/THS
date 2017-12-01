@@ -47,7 +47,7 @@ var THSPageStock = {
             var item = {
                 Text: text,
                 Href: href,
-                Date: TOOLS.Convertor.ToDate(new Date().getFullYear() + date),
+                Date: TOOLS.Convertor.ToDate(new Date().getFullYear() +" "+ date),
             };
 
             gsxw.push(item);
@@ -65,7 +65,7 @@ var THSPageStock = {
             var item = {
                 Text: text,
                 Href: href,
-                Date: TOOLS.Convertor.ToDate("2017-" + date),
+                Date: TOOLS.Convertor.ToDate(new Date().getFullYear() + " " + date),
             };
 
             gsgg.push(item);
@@ -82,7 +82,7 @@ var THSPageStock = {
             var item = {
                 Text: text,
                 Href: href,
-                Date: TOOLS.Convertor.ToDate("2017-" + date),
+                Date: TOOLS.Convertor.ToDate(new Date().getFullYear() + " " + date),
             };
 
             hyzx.push(item);
@@ -99,7 +99,7 @@ var THSPageStock = {
             var item = {
                 Text: text,
                 Href: href,
-                Date: TOOLS.Convertor.ToDate("2017-" + date),
+                Date: TOOLS.Convertor.ToDate(new Date().getFullYear() + " " + date),
             };
 
             yjbg.push(item);
@@ -1068,6 +1068,7 @@ var THSPageStock = {
         }
     },
  
+ 
     ///从页面提取数据
     GetDataFromPageV2: function (dbItem) {
         var res = {};
@@ -1077,6 +1078,7 @@ var THSPageStock = {
         else if ("首页概览" === dbItem.ContentType) {
             res = THSPageStock.AnalysePageHome(dbItem);
         }
+
         return res;
     }
 
