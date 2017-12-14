@@ -27,11 +27,11 @@ THSPageNews.GetNewsList = function (dbItem) {
 
 THSPageNews.GetNewsDetail = function (dbItem) {
     var $page = $(dbItem.Page);
-    var title = $($page.find(".atc-head")).text();
+    var title = $($page.find(".main-title")).text();
     var createTime = $($page.find("#pubtime_baidu")).text();
     var sourceName = $($page.find("#sourcename")).text();
     var sourceHref = $($page.find("#sourcename")).attr("href");
-    var content = $($page.find(".atc-content")).text();
+    var content = $($page.find(".main-text.atc-content")).text();
 
     var item = {};
     item.Title = title;
@@ -39,6 +39,12 @@ THSPageNews.GetNewsDetail = function (dbItem) {
     item.SourceHref = sourceHref;
     item.SourceName = sourceName;
     item.Content = content;
+
+    for (var key in item) {
+        if (!PARAM_CHECKER.IsValid(item[key])) {
+            item[key] = "无数据";
+        }
+    }
 
     return item;
 }

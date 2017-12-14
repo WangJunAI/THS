@@ -2,7 +2,7 @@
 var querystring = require('querystring');
 var MongoDB = require("../Core/MongoDB");
 
-
+var count = 0;
 var dict = {};
 var CoreHttpService = {
     Service: {
@@ -73,7 +73,7 @@ var CoreHttpService = {
  
         res.write(JSON.stringify(data));
         res.end();
-        console.log("返回 "+new Date());
+        console.log((++count)+" "+data.CMD+" "+new Date());
     }
 
 

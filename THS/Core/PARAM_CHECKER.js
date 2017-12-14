@@ -38,7 +38,7 @@ var PARAM_CHECKER = {
     
     ///判断是否是日期
     IsDate: function (input) {
-        return PARAM_CHECKER.IsValid(input) && "Invalid Date" != new Date(input.toString()).toString();
+        return PARAM_CHECKER.IsValid(input) && "Invalid Date" != new Date(input.toString().replace("-", "/").replace("年-", "/").replace("月", "/")).toString();
     },
     
     ///是否是JS路径
