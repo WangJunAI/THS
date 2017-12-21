@@ -4,27 +4,6 @@ var TOOLS = require("../Core/TOOLS");
 var SINAPageAnalyse = {}
 
 
-SINAPageAnalyse.GetDataFromPage = function (dbItem) {
-    var res = {ContentType:"未定义"};
-    if ("大单追踪实时数据" === dbItem.ContentType) {
-        res = {
-            Rows: eval(dbItem.Page.replace(/\0/g, ''))
-        }
-    }
-    else if ("SINA大单" === dbItem.ContentType) {
-        res = {
-            PageData: eval(dbItem.Page.replace(/\0/g, ''))
-        }
-    }
-    else if ("SINA个股历史交易" === dbItem.ContentType) {
-        res = SINAPageAnalyse.GetKLineFromPage(dbItem);
-        res.JiDu = dbItem.JiDu;
-        res.Year = dbItem.Year;
-    }
-
-    return res;
-} 
-
 ///获取日线数据
 SINAPageAnalyse.GetKLineFromPage = function (dbItem) {
     var $page = $(dbItem.Page);
@@ -33,6 +12,7 @@ SINAPageAnalyse.GetKLineFromPage = function (dbItem) {
 
     var linkArray = [];
     var trArray = $table.find("tbody tr");
+
     for (var k = 1; k < trArray.length; k++) {
         var tdArray = $(trArray[k]).find("td");
         var link = $($(tdArray[0]).find("a")).attr("href").trim();
@@ -46,17 +26,17 @@ SINAPageAnalyse.GetKLineFromPage = function (dbItem) {
 
         linkArray.push(link);
         var item = {};
-        item["日期"] = c1;
-        item["开盘价"] = c2;
-        item["最高价"] = c3;
-        item["收盘价"] = c4;
-        item["最低价"] = c5;
-        item["交易量(股)"] = c6;
-        item["交易金额(元)"] = c7;
+        item["日期"] = TOOLS.Convertor.ToDate(c1);
+        item["开盘价"] = parseFloat(c2);
+        item["最高价"] = parseFloat(c3);
+        item["收盘价"] = parseFloat(c4);
+        item["最低价"] = parseFloat(c5);
+        item["交易量(股)"] = parseInt(c6);
+        item["交易金额(元)"] = parseInt(c7);
 
         res.Rows.push(item);
     }
-     
+
     res["历史成交明细"] = linkArray;
     return res;
 
@@ -69,7 +49,8 @@ SINAPageAnalyse.GetRZRQFromPage = function (dbItem) {
     var $table = $page.find("#dataTable");
     var res = { Rows: [] };
     var trArray = $table.find("tbody tr");
-    for (var k = 3; k < trArray.length;k++) {
+
+    for (var k = 3; k < trArray.length; k++) {
         var tdArray = $(trArray[k]).find("td");
         var c1 = $(tdArray[0]).text().trim();//序号
         var c2 = $(tdArray[1]).text().trim();//日期
@@ -96,6 +77,7 @@ SINAPageAnalyse.GetRZRQFromPage = function (dbItem) {
         res.Rows.push(item);
 
     }
+
 
     return res;
 }
@@ -129,6 +111,7 @@ SINAPageAnalyse.GetGGJYMX = function (dbItem) {
 
     }
 
+
     return res;
 
 }
@@ -138,20 +121,21 @@ SINAPageAnalyse.GetGGJYMX = function (dbItem) {
 SINAPageAnalyse.GetCWZY = function (dbItem) {
     var $page = $(dbItem.Page);
     var trArray = $page.find("#FundHoldSharesTable tbody tr");
-    var length = trArray.length; 
     var array = [];
     var item = {};
+    var length = trArray.length;
+
     for (var k = 0; k < length; k++) {
         var tr = trArray[k];
         var key = $(tr).find("td").first().text().trim();
         var value = $(tr).find("td").last().text().trim();
-        
+
         if ("截止日期" === key) {
             item = {};
             array.push(item);
-        } 
+        }
 
-        if (true === PARAM_CHECKER.IsNotEmptyString(key)){
+        if (true === PARAM_CHECKER.IsNotEmptyString(key)) {
             item[key] = value;
         }
 
@@ -163,19 +147,22 @@ SINAPageAnalyse.GetCWZY = function (dbItem) {
         }
     }
 
+
     return array;
 }
+
+///获取大单数据
 SINAPageAnalyse.GetDaDan = function (dbItem) {
     var src = eval(dbItem.Page.replace(/\0/g, ''));
     var resArray = [];
     for (var k = 0; k < src.length; k++) {
         var item = {};
         item["StockCode"] = src[k]["symbol"].substring(2);
-        item["StockName"] = src[k]["name"].substring(2);
+        item["StockName"] = src[k]["name"].replace(/ /g, "");
         item["交易时间"] = src[k]["ticktime"];
-        item["成交价"] =parseFloat( src[k]["price"]);
-        item["成交量"] =parseInt( src[k]["volume"]);
-        item["之前价格"] =parseFloat( src[k]["prev_price"]);
+        item["成交价"] = parseFloat(src[k]["price"]);
+        item["成交量"] = parseInt(src[k]["volume"]);
+        item["之前价格"] = parseFloat(src[k]["prev_price"]);
         item["成交类型"] = src[k]["kind"];
 
         resArray.push(item);
@@ -183,18 +170,87 @@ SINAPageAnalyse.GetDaDan = function (dbItem) {
     return resArray;
 }
 
+///公司简介
+SINAPageAnalyse.GetGSJJ = function (dbItem) {
+    var $page = $(dbItem.Page);
+    var trArray = $page.find("#comInfo1 tbody tr");
+    var item = {};
+    for (var k = 0; k < trArray.length; k++) {
+        var tdArray = $(trArray[k]).find("td");
+        if (2 == tdArray.length) {
+            var key = $(tdArray[0]).text().replace(/：/g, "").trim();
+            var value = $(tdArray[1]).text().trim();
+            item[key] = value;
+        }
+        else if (4 == tdArray.length) {
+            var key1 = $(tdArray[0]).text().replace(/：/g, "").trim();
+            var key2 = $(tdArray[2]).text().replace(/：/g, "").trim();
+            var value1 = $(tdArray[1]).text().trim();
+            var value2 = $(tdArray[3]).text().trim();
+            item[key1] = value1;
+            item[key2] = value2;
+        }
+    }
+
+
+    item["上市日期"] = TOOLS.Convertor.ToDate(item["上市日期"]);
+
+    return item;
+}
+
+///公司简介
+SINAPageAnalyse.GetBKGN = function (dbItem) {
+    var $page = $(dbItem.Page);
+    var tbodyArray = $page.find("#con02-0 tbody");
+    var item = { "所属板块": [], "所属概念": [] };
+    if (2 == tbodyArray.length) {
+        var trArray1 = $(tbodyArray[0]).find("tr");
+        if (4 <= trArray1.length) {
+            for (var k = 2; k < trArray1.length - 2 - 1; k++) {
+                var value = $(trArray1[k]).find("td").first().text().trim();
+                item["所属板块"].push(value);
+            }
+        }
+
+        var trArray2= $(tbodyArray[1]).find("tr");
+        if (3 <= trArray2.length) {
+            for (var k = 2; k < trArray2.length - 2 ; k++) {
+                var value = $(trArray2[k]).find("td").first().text().trim();
+                item["所属概念"].push(value);
+            }
+        }
+    }
+    return item;
+}
+
 
 ///从页面获取数据
-SINAPageAnalyse.GetDataFromPage= function (dbItem) {
- 
-    if ("SINA财务摘要" === dbItem.ContentType) {
-        dbItem["PageData"] = SINAPageAnalyse.GetCWZY(dbItem);
-    }
-    else if ("SINA大单" === dbItem.ContentType) {
-        dbItem["PageData"] = SINAPageAnalyse.GetDaDan(dbItem);
-    }
-    dbItem.Page = "数据太长服务端已清空";
+SINAPageAnalyse.GetDataFromPage = function (dbItem) {
+    if (true === PARAM_CHECKER.IsNotEmptyString(dbItem.Page)) {
+        if ("SINA财务摘要" === dbItem.ContentType) {
+            dbItem["PageData"] = SINAPageAnalyse.GetCWZY(dbItem);
+        }
+        else if ("SINA大单" === dbItem.ContentType) {
+            dbItem["PageData"] = SINAPageAnalyse.GetDaDan(dbItem);
+        }
+        else if ("SINA历史交易" == dbItem.ContentType) {
+            dbItem["PageData"] = SINAPageAnalyse.GetKLineFromPage(dbItem);
+        }
+        else if ("SINA公司简介" == dbItem.ContentType) {
+            dbItem["PageData"] = SINAPageAnalyse.GetGSJJ(dbItem);
+        }
+        else if ("SINA板块概念" == dbItem.ContentType) {
+            dbItem["PageData"] = SINAPageAnalyse.GetBKGN(dbItem);
+        }
+        dbItem.Page = "数据太长服务端已清空";
 
+        if (undefined == dbItem._ProcResult) {
+            dbItem._ProcResult = "OK";
+        }
+    }
+    else {
+        dbItem._ProcResult = "Page字段不是非空html字符串";
+    }
     return dbItem;
 }
 
