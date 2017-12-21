@@ -75,7 +75,7 @@ THSPageAnalyse.GetZJLX = function (dbItem) {
     var $page = $(dbItem.Page);
     ///历史资金数据一览
     var lszjsjylTrArray = $page.find("table.m_table_3 tr");
-    var rows = [];
+    var rows = []; 
     ///表格行的第一,第二行是表头说明
     for (var i = 2; i < lszjsjylTrArray.length; i++) {
         var tdArray = $(lszjsjylTrArray[i]).children();
