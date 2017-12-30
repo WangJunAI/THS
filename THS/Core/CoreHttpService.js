@@ -28,7 +28,7 @@ var CoreHttpService = {
         }
     },
  
-    Run: function () {
+    Run: function (port) {
 
         ///配置项注册
         MongoDB.Register("140", "192.168.0.140", 27017, "StockTask");
@@ -59,7 +59,7 @@ var CoreHttpService = {
             
  
  
-        }).listen(8990);
+        }).listen(port);
     },
 
     Send: function (req, res,data) {

@@ -116,6 +116,12 @@ THSPageAnalyse.GetDataFromPage = function (dbItem) {
         if ("THS资金流向" === dbItem.ContentType) {
             dbItem["PageData"] = THSPageAnalyse.GetZJLX(dbItem);
         }
+        else if ("THS财经要闻新闻列表" === dbItem.ContentType) {
+            dbItem["PageData"]  = THSPageNews.GetNewsList(dbItem);
+        }
+        else if ("THS财经要闻新闻详细" === dbItem.ContentType) {
+            dbItem["PageData"]  = THSPageNews.GetNewsDetail(dbItem);
+        }
 
         dbItem.Page = "数据太长服务端已清空";
 

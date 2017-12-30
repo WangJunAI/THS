@@ -153,21 +153,75 @@ SINAPageAnalyse.GetCWZY = function (dbItem) {
 
 ///获取大单数据
 SINAPageAnalyse.GetDaDan = function (dbItem) {
-    var src = eval(dbItem.Page.replace(/\0/g, ''));
-    var resArray = [];
-    for (var k = 0; k < src.length; k++) {
-        var item = {};
-        item["StockCode"] = src[k]["symbol"].substring(2);
-        item["StockName"] = src[k]["name"].replace(/ /g, "");
-        item["交易时间"] = src[k]["ticktime"];
-        item["成交价"] = parseFloat(src[k]["price"]);
-        item["成交量"] = parseInt(src[k]["volume"]);
-        item["之前价格"] = parseFloat(src[k]["prev_price"]);
-        item["成交类型"] = src[k]["kind"];
+    if (PARAM_CHECKER.IsNotEmptyString(dbItem.Page)) {
+        var src = eval(dbItem.Page.replace(/\0/g, ''));
+        if (PARAM_CHECKER.IsArray(src)) {
+            var resArray = [];
+            for (var k = 0; k < src.length; k++) {
+                var item = {};
+                item["StockCode"] = src[k]["symbol"].substring(2);
+                item["StockName"] = src[k]["name"].replace(/ /g, "");
+                item["交易时间"] = src[k]["ticktime"];
+                item["成交价"] = parseFloat(src[k]["price"]);
+                item["成交量"] = parseInt(src[k]["volume"]);
+                item["之前价格"] = parseFloat(src[k]["prev_price"]);
+                item["成交类型"] = src[k]["kind"];
 
-        resArray.push(item);
+                resArray.push(item);
+            }
+            return resArray;
+        }
     }
-    return resArray;
+    return [];
+}
+
+///SINA股市雷达
+SINAPageAnalyse.GetStockRadar = function (dbItem) {
+    var list = [];
+    if (PARAM_CHECKER.IsNotEmptyString(dbItem.Page)) {
+        var $page = $(dbItem.Page);
+        var trArray = $page.find("tbody tr");
+        for (var k = 0; k < trArray.length; k++) {
+            var thArray = $(trArray[k]).find("th");
+
+            var th1 = $(thArray[0]).text().trim();
+            var th2 = $(thArray[1]).text().trim();
+            var th3 = $(thArray[2]).text().trim();
+            var th4 = $(thArray[3]).text().trim();
+            var th5 = $(thArray[4]).text().trim();
+            var th6 = $(thArray[5]).text().trim();
+            var th7 = $(thArray[6]).text().trim();
+            var th8 = $(thArray[7]).text().trim();
+            var th9 = $(thArray[4]).text().trim();
+            var th10 = $(thArray[5]).text().trim();
+            var th11 = $(thArray[6]).text().trim();
+            var th12 = $(thArray[7]).text().trim();
+
+            var item1 = {};
+            var item2 = {};
+            var item3 = {};
+            item1["异动时间"] = th1;
+            item1["股票代码"] = th2;
+            item1["股票简称"] = th3;
+            item1["异动信息"] = th4;
+
+            item2["异动时间"] = th5;
+            item2["股票代码"] = th6;
+            item2["股票简称"] = th7;
+            item2["异动信息"] = th8;
+
+            item3["异动时间"] = th9;
+            item3["股票代码"] = th10;
+            item3["股票简称"] = th11;
+            item3["异动信息"] = th12;
+
+            list.push(item1);
+            list.push(item2);
+            list.push(item3);
+        } 
+    }
+
+    return list;
 }
 
 ///公司简介
@@ -241,6 +295,9 @@ SINAPageAnalyse.GetDataFromPage = function (dbItem) {
         }
         else if ("SINA板块概念" == dbItem.ContentType) {
             dbItem["PageData"] = SINAPageAnalyse.GetBKGN(dbItem);
+        }
+        else if ("SINA股市雷达" === dbItem.ContentType) {
+            dbItem["PageData"] = SINAPageAnalyse.GetStockRadar(dbItem);
         }
         dbItem.Page = "数据太长服务端已清空";
 
