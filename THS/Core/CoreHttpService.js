@@ -16,6 +16,9 @@ var CoreHttpService = {
         "新浪": {
             RequirePath: "../BIZ/SINAAPI",
         },        
+        "今日头条": {
+            RequirePath: "../BIZ/TouTiaoAPI",
+        },        
         "系统任务": {
             RequirePath: "../BIZ/TaskAPI",
         },

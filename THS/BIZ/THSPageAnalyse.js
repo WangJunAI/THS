@@ -122,7 +122,12 @@ THSPageAnalyse.GetDataFromPage = function (dbItem) {
         else if ("THS财经要闻新闻详细" === dbItem.ContentType) {
             dbItem["PageData"]  = THSPageNews.GetNewsDetail(dbItem);
         }
-
+        else if ("THS个股龙虎榜" === dbItem.ContentType) {
+            dbItem["PageData"] = THSPageLHB.GetPageData_GGLHB(dbItem);
+        }
+        else if ("THS个股龙虎榜明细" === dbItem.ContentType) {
+            dbItem["PageData"] = THSPageLHB.GetPageData_GGLHBMX(dbItem);
+        }
         dbItem.Page = "数据太长服务端已清空";
 
         if (undefined == dbItem._ProcResult) {

@@ -44,7 +44,7 @@ SINAPageAnalyse.GetKLineFromPage = function (dbItem) {
 
 ///获取融资融券信息
 ///Url http://vip.stock.finance.sina.com.cn/q/go.php/vInvestConsult/kind/rzrq/index.phtml?symbol=sz002230&bdate=2017-01-01&edate=2017-11-24
-SINAPageAnalyse.GetRZRQFromPage = function (dbItem) {
+SINAPageAnalyse.GetRZRQ = function (dbItem) {
     var $page = $(dbItem.Page);
     var $table = $page.find("#dataTable");
     var res = { Rows: [] };
@@ -65,15 +65,15 @@ SINAPageAnalyse.GetRZRQFromPage = function (dbItem) {
 
         var item = {};
         item["序号"] = c1;
-        item["日期"] = c2;
-        item["融资余额"] = c3;
-        item["融资买入额"] = c4;
-        item["融资偿还额"] = c5;
-        item["融券余量金额"] = c6;
-        item["融券余量"] = c7;
-        item["融券卖出量"] = c8;
-        item["融券偿还量"] = c9;
-        item["融券余额"] = c10;
+        item["日期"] = new Date(c2.replace("-","/"));
+        item["融资余额"] = ("--" === c3) ? 0 : parseFloat(c3);
+        item["融资买入额"] = ("--" === c4) ? 0 : parseFloat(c4);
+        item["融资偿还额"] = ("--" === c5) ? 0 : parseFloat(c5);
+        item["融券余量金额"] = ("--" === c6) ? 0 : parseFloat(c6);
+        item["融券余量"] = ("--" === c7) ? 0 : parseFloat(c7);
+        item["融券卖出量"] = ("--" === c8) ? 0 : parseFloat(c8);
+        item["融券偿还量"] = ("--" === c9) ? 0 : parseFloat(c9);
+        item["融券余额"] = ("--" === c10) ? 0 : parseFloat(c10);
         res.Rows.push(item);
 
     }
@@ -298,6 +298,9 @@ SINAPageAnalyse.GetDataFromPage = function (dbItem) {
         }
         else if ("SINA股市雷达" === dbItem.ContentType) {
             dbItem["PageData"] = SINAPageAnalyse.GetStockRadar(dbItem);
+        }
+        else if ("SINA融资融券" === dbItem.ContentType) {
+            dbItem["PageData"] = SINAPageAnalyse.GetRZRQ(dbItem);
         }
         dbItem.Page = "数据太长服务端已清空";
 

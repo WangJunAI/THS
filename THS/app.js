@@ -6,7 +6,7 @@ var ths = require("./BIZ/THS");
 var wj = require("../THS/Core/WJMutilTask"); 
  
 var svr = require("../THS/Core/CoreHttpService");
-svr.Run();
+svr.Run(9011);
  
 
 console.log('Hello world ' + process.pid);

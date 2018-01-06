@@ -35,6 +35,7 @@
     <Compile Include="BIZ\NEWS.js">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="BIZ\TouTiaoAPI.js" />
     <Compile Include="BIZ\SINAPageAnalyse.js">
       <SubType>Code</SubType>
     </Compile>
@@ -76,6 +77,9 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BIZ\TouTiao.js">
+      <SubType>Code</SubType>
+    </Compile>
+    <Compile Include="BIZ\TouTiaoPageAnalyse.js">
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="BIZ\WIKI.js">
